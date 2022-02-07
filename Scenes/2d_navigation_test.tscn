@@ -1,0 +1,31 @@
+[gd_scene load_steps=4 format=3 uid="uid://ctepc3yn6s17p"]
+
+[ext_resource type="Texture2D" uid="uid://bfwwm0ag2kb1e" path="res://icon.png" id="1_0lcrb"]
+[ext_resource type="Script" path="res://Objects/TestNavigationUnit.gd" id="2_brbxy"]
+
+[sub_resource type="NavigationPolygon" id="NavigationPolygon_mybtp"]
+vertices = PackedVector2Array(176, 305, 345, 312, 452, 328, 493, 408, 203, 418, 21, 337, 104, 268, 13, 114, 97, 208, 144, 141, 402, 174, 397, 240, 296, 260, 233, 247, 76, 17, 169, 72, 341, 98, 241, -58, 591, -36, 514, 181, 645, 104, 637, 305, 546, 314)
+polygons = [PackedInt32Array(0, 1, 2, 3, 4, 5), PackedInt32Array(6, 0, 5), PackedInt32Array(6, 5, 7, 8), PackedInt32Array(9, 10, 11, 12, 13, 8), PackedInt32Array(9, 8, 7, 14, 15), PackedInt32Array(16, 15, 14, 17, 18), PackedInt32Array(19, 16, 18, 20), PackedInt32Array(19, 20, 21, 22)]
+outlines = [PackedVector2Array(241, -58, 76, 17, 13, 114, 21, 337, 203, 418, 493, 408, 452, 328, 345, 312, 176, 305, 104, 268, 97, 208, 233, 247, 296, 260, 397, 240, 402, 174, 144, 141, 169, 72, 341, 98, 514, 181, 546, 314, 637, 305, 645, 104, 591, -36)]
+
+[node name="Node2D" type="Node2D"]
+
+[node name="NavigationRegion2D" type="NavigationRegion2D" parent="."]
+position = Vector2(1, 68)
+navpoly = SubResource( "NavigationPolygon_mybtp" )
+
+[node name="Walk Target" type="Node2D" parent="."]
+position = Vector2(470, 326)
+
+[node name="TargetIcon" type="Sprite2D" parent="Walk Target"]
+modulate = Color(1, 0, 0, 1)
+scale = Vector2(0.2, 0.2)
+texture = ExtResource( "1_0lcrb" )
+
+[node name="Unit" type="Sprite2D" parent="."]
+position = Vector2(585, 253)
+scale = Vector2(0.4, 0.4)
+texture = ExtResource( "1_0lcrb" )
+script = ExtResource( "2_brbxy" )
+
+[node name="NavigationAgent2D" type="NavigationAgent2D" parent="Unit"]

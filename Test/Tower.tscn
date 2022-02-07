@@ -1,0 +1,21 @@
+[gd_scene load_steps=3 format=3 uid="uid://cfowg5ff74twv"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fvwqc"]
+albedo_color = Color(0.996078, 1, 0.352941, 1)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_ewx8b"]
+material = SubResource( "StandardMaterial3D_fvwqc" )
+top_radius = 0.3
+bottom_radius = 0.4
+height = 1.0
+radial_segments = 10
+rings = 1
+
+[node name="Tower" type="Node3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 4)
+
+[node name="Mesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+layers = 2
+mesh = SubResource( "CylinderMesh_ewx8b" )
+skeleton = NodePath("../../..")
