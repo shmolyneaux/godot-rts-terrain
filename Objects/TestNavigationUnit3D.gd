@@ -16,11 +16,11 @@ func _process(delta):
 		print("changing target")
 		target_location = potential_new_target
 		$NavigationAgent3D.set_target_location(target_location)
-		
+
 	if not $NavigationAgent3D.is_target_reached():
 		var move_target = $NavigationAgent3D.get_next_location()
 		var move_vec = (move_target - position).normalized() * speed * delta
-		
+
 		# Don't bounce around the target location, snap to it exactly if it's close
 		#print(move_target, " =?= " , target_location, " =?= ", position)
 		if (move_target - position).length() < move_vec.length():

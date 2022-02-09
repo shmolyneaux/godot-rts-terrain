@@ -1,12 +1,12 @@
-[gd_scene load_steps=19 format=3 uid="uid://drg1odby38wqd"]
+[gd_scene load_steps=17 format=3 uid="uid://cacmcn2r2xnrk"]
 
 [ext_resource type="Script" path="res://Test/TestCamera.gd" id="1_m2yar"]
-[ext_resource type="Script" path="res://Scenes/RtsTerrain.gd" id="1_vb6gr"]
-[ext_resource type="PackedScene" uid="uid://gy0cas5bma04" path="res://Test/TestUnit3D.tscn" id="2_iif0f"]
+[ext_resource type="Script" path="res://addons/rts_terrain/RtsTerrain.gd" id="1_vb6gr"]
 [ext_resource type="Texture2D" uid="uid://bdgj0mv5t50gr" path="res://Assets/Textures/selection_circle_8px.png" id="3_1r4l6"]
 [ext_resource type="Script" path="res://Objects/SelectionCircle.gd" id="4_c4b8r"]
 [ext_resource type="Script" path="res://Test/Spawner.gd" id="5_2tuc3"]
 [ext_resource type="Script" path="res://Test/PlayerController.gd" id="7_2outt"]
+[ext_resource type="PackedScene" uid="uid://iq0vwdwd0ik4" path="res://addons/rts_terrain/Brush.tscn" id="7_33ew6"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_rf48w"]
 sky_top_color = Color(0.568627, 0.698039, 0.807843, 1)
@@ -55,14 +55,6 @@ tracks/0/keys = {
 "values": [Vector3(0, 0, 0), Vector3(0, 1.5708, 0), Vector3(0, 3.14159, 0), Vector3(0, 4.71239, 0), Vector3(0, 6.28319, 0)]
 }
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2inng"]
-albedo_color = Color(1, 0, 0, 1)
-
-[sub_resource type="SphereMesh" id="SphereMesh_jmgta"]
-material = SubResource( "StandardMaterial3D_2inng" )
-radius = 0.1
-height = 0.2
-
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yhjk1"]
 albedo_color = Color(0.85098, 0.243137, 1, 1)
 
@@ -71,12 +63,13 @@ material = SubResource( "StandardMaterial3D_yhjk1" )
 radius = 0.1
 height = 0.2
 
-[sub_resource type="Gradient" id="Gradient_hko4x"]
-offsets = PackedFloat32Array(0)
-colors = PackedColorArray(0, 1, 0, 1)
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2inng"]
+albedo_color = Color(1, 0, 0, 1)
 
-[sub_resource type="GradientTexture2D" id="GradientTexture2D_3sm26"]
-gradient = SubResource( "Gradient_hko4x" )
+[sub_resource type="SphereMesh" id="SphereMesh_jmgta"]
+material = SubResource( "StandardMaterial3D_2inng" )
+radius = 0.1
+height = 0.2
 
 [node name="Main" type="Node3D"]
 
@@ -104,20 +97,13 @@ autoplay = "Rotate Around Origin"
 anims/RESET = SubResource( "Animation_v4rfe" )
 "anims/Rotate Around Origin" = SubResource( "Animation_tpgr8" )
 
-[node name="TestUnit3D" parent="." instance=ExtResource( "2_iif0f" )]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.48506, 0, 4.00034)
-
 [node name="DeathCircle" type="Decal" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.4456, 0.186315, 6.40901)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.5, 0, 16.5)
 texture_albedo = ExtResource( "3_1r4l6" )
 modulate = Color(1, 0, 0, 1)
 cull_mask = 1048573
 script = ExtResource( "4_c4b8r" )
 target = NodePath("../Walk Target")
-
-[node name="Walk Target" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.4456, 0.186315, 6.40901)
-mesh = SubResource( "SphereMesh_jmgta" )
 
 [node name="Spawner" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.16854, 0, 1.20924)
@@ -125,24 +111,28 @@ mesh = SubResource( "SphereMesh_vyjk5" )
 script = ExtResource( "5_2tuc3" )
 
 [node name="Timer" type="Timer" parent="Spawner"]
+autostart = true
 
 [node name="RtsTerrain" type="Node3D" parent="."]
 script = ExtResource( "1_vb6gr" )
-navigation_region_debug = true
 width = 20
-height = 9
-terrain_cliffs = PackedInt32Array(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, -1, 1, 1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
-terrain_holes = PackedInt32Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+height = 19
+terrain_cliffs = PackedInt32Array(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+terrain_holes = PackedInt32Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+
+[node name="Walk Target" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.5, 0, 16.5)
+
+[node name="Walk Target" type="MeshInstance3D" parent="Walk Target"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0914876, 0)
+mesh = SubResource( "SphereMesh_jmgta" )
+skeleton = NodePath("../..")
 
 [node name="PlayerController" type="Node" parent="."]
 script = ExtResource( "7_2outt" )
 
-[node name="BuildingPlacement" type="Decal" parent="PlayerController"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.87779, 0, 4.32007)
-extents = Vector3(0.49, 1, 0.49)
-texture_albedo = SubResource( "GradientTexture2D_3sm26" )
-modulate = Color(1, 1, 0, 1)
-cull_mask = 1048573
+[node name="Brush" parent="PlayerController" instance=ExtResource( "7_33ew6" )]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.84919, 0, 2.08602)
 
 [connection signal="timeout" from="Spawner/Timer" to="Spawner" method="_on_timer_timeout"]
 [connection signal="input_event" from="RtsTerrain" to="PlayerController" method="_on_rts_terrain_input_event"]

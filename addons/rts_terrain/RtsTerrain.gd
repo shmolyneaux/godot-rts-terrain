@@ -1,4 +1,5 @@
 @tool
+class_name RtsTerrain
 extends Node3D
 
 const RAMP = -1
@@ -63,8 +64,48 @@ func global_to_tile(coord: Vector3) -> TileCoord:
 	
 	return output
 	
+func tile_to_global(coord: TileCoord) -> Vector3:
+	var output = TileCoord.new()
+	
+	var cliff_level = terrain.get_cliff_level(coord.x, coord.y)
+	if cliff_level == -1:
+		var ramp_cliff_level_sum = 0
+		var real_tile_count = 0
+		
+		var left = get_cliff(coord.x-1, coord.y)
+		var right = get_cliff(coord.x+1, coord.y)
+		var up = get_cliff(coord.x, coord.y-1)
+		var down = get_cliff(coord.x, coord.y+1)
+		if up != -1:
+			ramp_cliff_level_sum += up
+			real_tile_count += 1
+		if down != -1:
+			ramp_cliff_level_sum += down
+			real_tile_count += 1
+		if left != -1:
+			ramp_cliff_level_sum += left
+			real_tile_count += 1
+		if right != -1:
+			ramp_cliff_level_sum += right
+			real_tile_count += 1
+			
+		if real_tile_count:
+			cliff_level = ramp_cliff_level_sum / real_tile_count
+		
+	return Vector3(coord.x, cliff_level, coord.y)
+	
+func is_hole(x: int, y: int, value) -> bool:
+	return terrain.is_hole(x, y)
+	
 func set_hole(x: int, y: int, value):
 	terrain.set_hole(x, y, value)
+	_regenerate_mesh()
+	
+func get_cliff(x: int, y: int) -> int:
+	return terrain.get_cliff_level(x, y)
+	
+func set_cliff(x: int, y: int, value):
+	terrain.set_cliff_level(x, y, value)
 	_regenerate_mesh()
 
 static func _create_tri_face(
@@ -104,10 +145,11 @@ static func _create_square(
 	st: SurfaceTool,
 	center: Vector3,
 	size: float,
-	rotation: Vector3
+	rot: Vector3,
+	vscale: float = 1.0
 ):
 	var half_size = size*0.5
-	var new_basis = Basis.from_euler(rotation)
+	var new_basis = Basis.from_euler(rot).scaled(Vector3(1.0, vscale, 1.0))
 	var xform = Transform3D(new_basis, center)
 	_create_quad_face(
 		st,
@@ -238,7 +280,6 @@ class TerrainData:
 				print("mismatched terrain hole size!")
 	
 	func resize(new_width, new_height):
-		print("resizing to ", new_width, " by ", new_height)
 		var new_data = []
 		var new_holes = []
 		new_data.resize(new_width*new_height)
@@ -257,8 +298,10 @@ class TerrainData:
 	func set_cliff_level(x: int, y: int, value: int):
 		if x < 0 or width <= x:
 			print(x, " ", y, " out of range")
+			return
 		if y < 0 or height <= y:
 			print(x, " ", y, " out of range")
+			return
 
 		var idx = x + y*width
 		_data[idx] = value
@@ -275,8 +318,10 @@ class TerrainData:
 	func set_hole(x: int, y: int, value: int):
 		if x < 0 or width <= x:
 			print(x, " ", y, " out of range")
+			return
 		if y < 0 or height <= y:
 			print(x, " ", y, " out of range")
+			return
 
 		var idx = x + y*width
 		_holes[idx] = value
@@ -357,22 +402,20 @@ static func ramp_dir(
 	print("Could not match: ", up, down, left, right)
 	return RampShape.ERROR
 
-static func generate_mesh(terrain, navmesh=false):
-	print("regenerating mesh")
+static func generate_mesh(terrain_data, navmesh=false):
 	var st = SurfaceTool.new()
-
 
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 
-	for x in range(terrain.width):
-		for y in range(terrain.height):
-			var cliff_level = terrain.get_cliff_level(x, y)
-			var up_level = terrain.get_cliff_level(x, y-1)
-			var down_level = terrain.get_cliff_level(x, y+1)
-			var left_level = terrain.get_cliff_level(x-1, y)
-			var right_level = terrain.get_cliff_level(x+1, y)
+	for x in range(terrain_data.width):
+		for y in range(terrain_data.height):
+			var cliff_level = terrain_data.get_cliff_level(x, y)
+			var up_level = terrain_data.get_cliff_level(x, y-1)
+			var down_level = terrain_data.get_cliff_level(x, y+1)
+			var left_level = terrain_data.get_cliff_level(x-1, y)
+			var right_level = terrain_data.get_cliff_level(x+1, y)
 			
-			if terrain.is_hole(x, y) and navmesh:
+			if terrain_data.is_hole(x, y) and navmesh:
 				continue
 			
 			if cliff_level == RAMP:
@@ -482,40 +525,38 @@ static func generate_mesh(terrain, navmesh=false):
 				)
 				
 				if not navmesh:
-					# TODO: deal with ramps
-					# TODO: deal with cliff level differences of more than 1
 					if cliff_level > up_level:
-						if up_level != RAMP:
-							_create_square(
-								st,
-								Vector3(x, float(cliff_level+up_level)/2, y-0.5),
-								1.0,
-								Vector3(-PI/2, 0, 0)
-							)
+						_create_square(
+							st,
+							Vector3(x, float(cliff_level+up_level)/2, y-0.5),
+							1.0,
+							Vector3(-PI/2, 0, 0),
+							cliff_level - up_level,
+						)
 					if cliff_level > down_level:
-						if down_level != RAMP:
-							_create_square(
-								st,
-								Vector3(x, float(cliff_level+down_level)/2, y+0.5),
-								1.0,
-								Vector3(PI/2, 0, 0)
-							)
+						_create_square(
+							st,
+							Vector3(x, float(cliff_level+down_level)/2, y+0.5),
+							1.0,
+							Vector3(PI/2, 0, 0),
+							cliff_level - down_level,
+						)
 					if cliff_level > left_level:
-						if left_level != RAMP:
-							_create_square(
-								st,
-								Vector3(x-0.5, float(cliff_level+left_level)/2, y),
-								1.0,
-								Vector3(0, 0, PI/2)
-							)
+						_create_square(
+							st,
+							Vector3(x-0.5, float(cliff_level+left_level)/2, y),
+							1.0,
+							Vector3(0, 0, PI/2),
+							cliff_level - left_level,
+						)
 					if cliff_level > right_level:
-						if right_level != RAMP:
-							_create_square(
-								st,
-								Vector3(x+0.5, float(cliff_level+right_level)/2, y),
-								1.0,
-								Vector3(0, 0, -PI/2)
-							)
+						_create_square(
+							st,
+							Vector3(x+0.5, float(cliff_level+right_level)/2, y),
+							1.0,
+							Vector3(0, 0, -PI/2),
+							cliff_level - right_level,
+						)
 
 	return st.commit()
 
@@ -551,7 +592,7 @@ static func _navmesh_from_mesh(mesh):
 func _emit_physics_collider_input_events(
 	camera: Node,
 	event: InputEvent,
-	position: Vector3,
+	pos: Vector3,
 	normal: Vector3,
 	_shape_idx: int
 ):
@@ -559,7 +600,7 @@ func _emit_physics_collider_input_events(
 		"input_event",
 		camera,
 		event,
-		position,
+		pos,
 		normal
 	)
 
@@ -577,12 +618,14 @@ func _regenerate_mesh():
 		add_child(mesh)
 		managed_children.append(mesh)
 	
-		if generate_static_physics_body:
+		# Always generate a physics body in the editor so we can use it for
+		# raycasts when editing the terrain.
+		if generate_static_physics_body or Engine.is_editor_hint():
 			# The docs say this is "mainly used for testing"...
 			mesh.create_trimesh_collision()
-			if not Engine.is_editor_hint():
-				var static_body = mesh.get_children()[0]
-				static_body.connect("input_event", _emit_physics_collider_input_events)
+
+			var static_body = mesh.get_children()[0]
+			static_body.connect("input_event", _emit_physics_collider_input_events)
 		
 		if generate_navigation_region:
 			var nav_region = NavigationRegion3D.new()

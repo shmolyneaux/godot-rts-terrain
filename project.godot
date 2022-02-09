@@ -8,6 +8,16 @@
 
 config_version=5
 
+_global_script_classes=[{
+"base": "Node3D",
+"class": &"RtsTerrain",
+"language": &"GDScript",
+"path": "res://addons/rts_terrain/RtsTerrain.gd"
+}]
+_global_script_class_icons={
+"RtsTerrain": ""
+}
+
 [application]
 
 config/name="rts_terrain"
@@ -19,6 +29,10 @@ config/features=PackedStringArray("4.0", "Vulkan Clustered")
 
 window/size/viewport_width=1920
 window/size/viewport_height=1080
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/rts_terrain/plugin.cfg")
 
 [input]
 

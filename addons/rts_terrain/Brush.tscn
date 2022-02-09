@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3 uid="uid://iq0vwdwd0ik4"]
+
+[sub_resource type="Gradient" id="Gradient_hko4x"]
+offsets = PackedFloat32Array(0)
+colors = PackedColorArray(0, 1, 0, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_3sm26"]
+gradient = SubResource( "Gradient_hko4x" )
+
+[node name="Brush" type="Decal"]
+extents = Vector3(0.49, 25, 0.49)
+texture_albedo = SubResource( "GradientTexture2D_3sm26" )
+modulate = Color(1, 1, 0, 1)
+cull_mask = 1048573
