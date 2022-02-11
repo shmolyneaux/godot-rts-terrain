@@ -12,7 +12,14 @@ var set_cliff_level = 0
 # cleared whenever the mouse moves.
 var active_tile = null
 
-enum TerrainTool {RAISE_CLIFF=0, LOWER_CLIFF=1, CREATE_RAMP=2, REMOVE_RAMP=3}
+enum TerrainTool {
+	RAISE_CLIFF=0,
+	LOWER_CLIFF=1,
+	CREATE_RAMP=2,
+	REMOVE_RAMP=3,
+	RAISE_TERRAIN=4,
+	LOWER_TERRAIN=5,
+}
 var active_tool = TerrainTool.RAISE_CLIFF
 
 func terrain_input_event():
@@ -62,6 +69,8 @@ func _forward_3d_gui_input(viewport_camera: Camera3D, event):
 		recent_mouse_normal = viewport_camera.project_ray_normal(event.position)
 		
 	if event is InputEventMouseButton and active_tile:
+		# TODO: only handle the release if the press was also handled
+		handled = event.button_index == MOUSE_BUTTON_LEFT
 		if event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 			var ramp_removal_cliff_level = 10000
 			var left = editing_object.get_cliff(active_tile.x-1, active_tile.y)
@@ -119,8 +128,31 @@ func _forward_3d_gui_input(viewport_camera: Camera3D, event):
 					active_tile.y,
 					ramp_removal_cliff_level
 				)
+			if active_tool == TerrainTool.RAISE_TERRAIN:
+				var new_height
+				for offset in [[0,0], [0,1], [1,1], [1,0]]:
+					new_height = 0.1 + editing_object.get_height(
+						active_tile.x + offset[0],
+						active_tile.y + offset[1],
+					)
+					editing_object.set_height(
+						active_tile.x + offset[0],
+						active_tile.y + offset[1],
+						new_height
+					)
+			if active_tool == TerrainTool.LOWER_TERRAIN:
+				var new_height
+				for offset in [[0,0], [0,1], [1,1], [1,0]]:
+					new_height = -0.1 + editing_object.get_height(
+						active_tile.x + offset[0],
+						active_tile.y + offset[1],
+					)
+					editing_object.set_height(
+						active_tile.x + offset[0],
+						active_tile.y + offset[1],
+						new_height
+					)
 			active_tile = null
-			handled = true
 		
 	return handled
 	
@@ -138,7 +170,12 @@ func _physics_process(delta):
 				active_tile = editing_object.global_to_tile(result.position)
 				terrain_brush.global_transform.origin = editing_object.tile_to_global(active_tile)
 				
-				if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+				if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) and active_tool in [
+					TerrainTool.RAISE_CLIFF,
+					TerrainTool.LOWER_CLIFF,
+					TerrainTool.CREATE_RAMP,
+					TerrainTool.REMOVE_RAMP,
+				]:
 					editing_object.set_cliff(
 						active_tile.x,
 						active_tile.y,

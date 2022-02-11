@@ -15,6 +15,7 @@ const RAMP = -1
 
 var managed_children = []
 
+# TODO: Seems like the "TerrainData" should be a resource?
 var terrain = TerrainData.new()
 @export var width: int:
 	get:
@@ -48,6 +49,17 @@ var terrain = TerrainData.new()
 			print("new terrain of size ", v.size(), " doesn't match size: ", width*height)
 		else:
 			terrain.holes = v
+			_regenerate_mesh()
+			
+			
+@export var terrain_height: PackedFloat32Array:
+	get:
+		return terrain.heightmap
+	set(v):
+		if v.size() != (width+1) * (height+1):
+			print("new terrain of size ", v.size(), " doesn't match size: ", (width+1)*(height+1))
+		else:
+			terrain.heightmap = v
 			_regenerate_mesh()
 
 signal input_event(camera: Node, event: InputEvent, position: Vector3, normal: Vector3)
@@ -94,18 +106,25 @@ func tile_to_global(coord: TileCoord) -> Vector3:
 		
 	return Vector3(coord.x, cliff_level, coord.y)
 	
-func is_hole(x: int, y: int, value) -> bool:
+func is_hole(x: int, y: int) -> bool:
 	return terrain.is_hole(x, y)
 	
-func set_hole(x: int, y: int, value):
+func set_hole(x: int, y: int, value: int):
 	terrain.set_hole(x, y, value)
 	_regenerate_mesh()
 	
 func get_cliff(x: int, y: int) -> int:
 	return terrain.get_cliff_level(x, y)
 	
-func set_cliff(x: int, y: int, value):
+func set_cliff(x: int, y: int, value: int):
 	terrain.set_cliff_level(x, y, value)
+	_regenerate_mesh()
+	
+func get_height(x: int, y: float) -> float:
+	return terrain.get_terrain_height(x, y)
+	
+func set_height(x: int, y: int, value: float):
+	terrain.set_terrain_height(x, y, value)	
 	_regenerate_mesh()
 
 static func _create_tri_face(
@@ -129,16 +148,8 @@ static func _create_quad_face(
 	points: Array
 ):
 	assert(points.size() == 4)
-	var normal = (points[0] - points[1]).cross(points[2] - points[0]).normalized()
-	var uv = Vector2(0, 0)
-	
-	for point in [
-		points[0], points[1], points[3],
-		points[1], points[2], points[3]
-	]:
-		st.set_normal(normal)
-		st.set_uv(uv)
-		st.add_vertex(point)
+	_create_tri_face(st, [points[0], points[1], points[3]])
+	_create_tri_face(st, [points[1], points[2], points[3]])
 
 
 static func _create_square(
@@ -269,6 +280,7 @@ class TerrainData:
 				_data = v
 			else:
 				print("mismatched terrain size!")
+				
 	var _holes: PackedInt32Array = PackedInt32Array([0])
 	var holes: PackedInt32Array:
 		get:
@@ -278,20 +290,37 @@ class TerrainData:
 				_holes = v
 			else:
 				print("mismatched terrain hole size!")
+				
+	var _heightmap: PackedFloat32Array = PackedFloat32Array([0.0, 0.0, 0.0, 0.0])
+	var heightmap: PackedFloat32Array:
+		get:
+			return _heightmap
+		set(v):
+			if v.size() == _heightmap.size():
+				_heightmap = v
+			else:
+				print("mismatched terrain heightmap size!")
 	
 	func resize(new_width, new_height):
 		var new_data = []
 		var new_holes = []
+		var new_heightmap = []
 		new_data.resize(new_width*new_height)
 		new_holes.resize(new_width*new_height)
+		new_heightmap.resize((new_width+1)*(new_height+1))
 		
 		for x in range(new_width):
 			for y in range(new_height):
 				new_data[x + y*new_width] = get_cliff_level(x, y)
 				new_holes[x + y*new_width] = is_hole(x, y)
 				
+		for x in range(new_width+1):
+			for y in range(new_height+1):
+				new_heightmap[x + y*(new_width+1)] = get_terrain_height(x, y)
+				
 		_data = PackedInt32Array(new_data)
 		_holes = PackedInt32Array(new_holes)
+		_heightmap = PackedFloat32Array(new_heightmap)
 		_width = new_width
 		_height = new_height
 		
@@ -334,6 +363,27 @@ class TerrainData:
 
 		var idx = x + y*width
 		return _holes[idx]
+		
+		
+	func set_terrain_height(x: int, y: int, value: float):
+		if x < 0 or width + 1 <= x:
+			print(x, " ", y, " out of range")
+			return
+		if y < 0 or height + 1 <= y:
+			print(x, " ", y, " out of range")
+			return
+
+		var idx = x + y*(width+1)
+		_heightmap[idx] = value
+	
+	func get_terrain_height(x: int, y: int) -> float:
+		if x < 0 or width + 1 <= x:
+			return 0.0
+		if y < 0 or height + 1 <= y:
+			return 0.0
+
+		var idx = x + y*(width+1)
+		return _heightmap[idx]
 
 
 enum RampShape {
@@ -414,6 +464,11 @@ static func generate_mesh(terrain_data, navmesh=false):
 			var down_level = terrain_data.get_cliff_level(x, y+1)
 			var left_level = terrain_data.get_cliff_level(x-1, y)
 			var right_level = terrain_data.get_cliff_level(x+1, y)
+			
+			var tl = terrain_data.get_terrain_height(x, y)
+			var tr = terrain_data.get_terrain_height(x+1, y)
+			var bl = terrain_data.get_terrain_height(x, y+1)
+			var br = terrain_data.get_terrain_height(x+1, y+1)
 			
 			if terrain_data.is_hole(x, y) and navmesh:
 				continue
@@ -517,45 +572,56 @@ static func generate_mesh(terrain_data, navmesh=false):
 							Vector3(0, 0, 0)
 						)
 			else:
-				_create_square(
+				_create_quad_face(
 					st,
-					Vector3(x, cliff_level, y),
-					1.0,
-					Vector3(0, 0, 0)
+					[
+						Vector3(x-0.5, tl+cliff_level, y-0.5),
+						Vector3(x+0.5, tr+cliff_level, y-0.5),
+						Vector3(x+0.5, br+cliff_level, y+0.5),
+						Vector3(x-0.5, bl+cliff_level, y+0.5)
+					]
 				)
 				
 				if not navmesh:
 					if cliff_level > up_level:
-						_create_square(
+						_create_quad_face(
 							st,
-							Vector3(x, float(cliff_level+up_level)/2, y-0.5),
-							1.0,
-							Vector3(-PI/2, 0, 0),
-							cliff_level - up_level,
+							[
+								Vector3(x+0.5, tr+cliff_level, y-0.5),
+								Vector3(x-0.5, tl+cliff_level, y-0.5),
+								Vector3(x-0.5, tl+up_level, y-0.5),
+								Vector3(x+0.5, tr+up_level, y-0.5)
+							]
 						)
 					if cliff_level > down_level:
-						_create_square(
+						_create_quad_face(
 							st,
-							Vector3(x, float(cliff_level+down_level)/2, y+0.5),
-							1.0,
-							Vector3(PI/2, 0, 0),
-							cliff_level - down_level,
+							[
+								Vector3(x-0.5, bl+cliff_level, y+0.5),
+								Vector3(x+0.5, br+cliff_level, y+0.5),
+								Vector3(x+0.5, br+down_level, y+0.5),
+								Vector3(x-0.5, bl+down_level, y+0.5)
+							]
 						)
 					if cliff_level > left_level:
-						_create_square(
+						_create_quad_face(
 							st,
-							Vector3(x-0.5, float(cliff_level+left_level)/2, y),
-							1.0,
-							Vector3(0, 0, PI/2),
-							cliff_level - left_level,
+							[
+								Vector3(x-0.5, tl+cliff_level, y-0.5),
+								Vector3(x-0.5, bl+cliff_level, y+0.5),
+								Vector3(x-0.5, bl+left_level, y+0.5),
+								Vector3(x-0.5, tl+left_level, y-0.5)
+							]
 						)
 					if cliff_level > right_level:
-						_create_square(
+						_create_quad_face(
 							st,
-							Vector3(x+0.5, float(cliff_level+right_level)/2, y),
-							1.0,
-							Vector3(0, 0, -PI/2),
-							cliff_level - right_level,
+							[
+								Vector3(x+0.5, br+cliff_level, y+0.5),
+								Vector3(x+0.5, tr+cliff_level, y-0.5),
+								Vector3(x+0.5, tr+right_level, y-0.5),
+								Vector3(x+0.5, br+right_level, y+0.5)
+							]
 						)
 
 	return st.commit()

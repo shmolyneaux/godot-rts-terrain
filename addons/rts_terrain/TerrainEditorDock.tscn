@@ -33,7 +33,21 @@ offset_right = 1920.0
 offset_bottom = 136.0
 text = "Remove Ramp"
 
+[node name="Raise Terrain" type="Button" parent="."]
+offset_top = 140.0
+offset_right = 1920.0
+offset_bottom = 171.0
+text = "Raise Terrain"
+
+[node name="Lower Terrain" type="Button" parent="."]
+offset_top = 175.0
+offset_right = 1920.0
+offset_bottom = 206.0
+text = "Lower Terrain"
+
 [connection signal="pressed" from="Raise Cliff" to="." method="_on_raise_cliff_pressed"]
 [connection signal="pressed" from="Lower Cliff" to="." method="_on_lower_cliff_pressed"]
 [connection signal="pressed" from="Create Ramp" to="." method="_on_create_ramp_pressed"]
 [connection signal="pressed" from="Remove Ramp" to="." method="_on_remove_ramp_pressed"]
+[connection signal="pressed" from="Raise Terrain" to="." method="_on_raise_terrain_pressed"]
+[connection signal="pressed" from="Lower Terrain" to="." method="_on_lower_terrain_pressed"]
