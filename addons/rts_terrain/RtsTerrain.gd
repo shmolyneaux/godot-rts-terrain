@@ -4,6 +4,9 @@ extends Node3D
 
 const RAMP = -1
 
+@export var ground_material: Material = null
+@export var wall_material: Material = null
+
 @export var generate_navigation_region: bool = true
 @export var generate_static_physics_body: bool = true
 @export var navigation_region_debug: bool = false:
@@ -129,18 +132,20 @@ func set_height(x: int, y: int, value: float):
 
 static func _create_tri_face(
 	st: SurfaceTool,
-	points: Array
+	points: Array,
+	uvs: Array = [
+		Vector2(0, 0),
+		Vector2(1, 0),
+		Vector2(0, 1),
+	]
 ):
 	assert(points.size() == 3)
 	var normal = (points[0] - points[1]).cross(points[2] - points[0]).normalized()
-	var uv = Vector2(0, 0)
 	
-	for point in [
-		points[0], points[1], points[2],
-	]:
+	for idx in range(3):
 		st.set_normal(normal)
-		st.set_uv(uv)
-		st.add_vertex(point)
+		st.set_uv(uvs[idx])
+		st.add_vertex(points[idx])
 
 
 static func _create_quad_face(
@@ -148,8 +153,25 @@ static func _create_quad_face(
 	points: Array
 ):
 	assert(points.size() == 4)
-	_create_tri_face(st, [points[0], points[1], points[3]])
-	_create_tri_face(st, [points[1], points[2], points[3]])
+	var height = (points[0] - points[3]).length()
+	_create_tri_face(
+		st,
+		[points[0], points[1], points[3]],
+		[
+			Vector2(0, 0),
+			Vector2(1, 0),
+			Vector2(0, height),
+		],
+	)
+	_create_tri_face(
+		st,
+		[points[2], points[3], points[1]],
+		[
+			Vector2(1, height),
+			Vector2(0, height),
+			Vector2(1, 0),
+		],
+	)
 
 
 static func _create_square(
@@ -454,8 +476,10 @@ static func ramp_dir(
 
 static func generate_mesh(terrain_data, navmesh=false):
 	var st = SurfaceTool.new()
+	var wall_st = SurfaceTool.new()
 
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	wall_st.begin(Mesh.PRIMITIVE_TRIANGLES)
 
 	for x in range(terrain_data.width):
 		for y in range(terrain_data.height):
@@ -477,16 +501,32 @@ static func generate_mesh(terrain_data, navmesh=false):
 				var shape = ramp_dir(up_level, down_level, left_level, right_level)
 				match shape:
 					RampShape.TO_RIGHT:
-						var xform = Transform3D(
-							Basis.from_euler(Vector3(0,-PI/2,0)),
-							Vector3(x, 0, y),
-						)
-						_create_ramp(
+						_create_quad_face(
 							st,
-							xform,
-							navmesh or up_level == RAMP or up_level == right_level,
-							navmesh or down_level == RAMP or down_level == right_level,
+							[
+								Vector3(x-0.5, tl+left_level, y-0.5),
+								Vector3(x+0.5, tr+right_level, y-0.5),
+								Vector3(x+0.5, br+right_level, y+0.5),
+								Vector3(x-0.5, bl+left_level, y+0.5),
+							]
 						)
+						if not navmesh:
+							_create_tri_face(
+								wall_st,
+								[
+									Vector3(x+0.5, br+right_level, y+0.5),
+									Vector3(x+0.5, br+left_level, y+0.5),
+									Vector3(x-0.5, bl+left_level, y+0.5),
+								]
+							)
+							_create_tri_face(
+								wall_st,
+								[
+									Vector3(x+0.5, tr+right_level, y-0.5),
+									Vector3(x-0.5, tl+left_level, y-0.5),
+									Vector3(x+0.5, tr+left_level, y-0.5),
+								]
+							)
 					RampShape.TO_LEFT:
 						var xform = Transform3D(
 							Basis.from_euler(Vector3(0,PI/2,0)),
@@ -510,16 +550,32 @@ static func generate_mesh(terrain_data, navmesh=false):
 							navmesh or right_level == RAMP or right_level == up_level,
 						)
 					RampShape.TO_DOWN:
-						var xform = Transform3D(
-							Basis.from_euler(Vector3(0,PI,0)),
-							Vector3(x, 0, y),
-						)
-						_create_ramp(
+						_create_quad_face(
 							st,
-							xform,
-							navmesh or right_level == RAMP or right_level == down_level,
-							navmesh or left_level == RAMP or left_level == down_level
+							[
+								Vector3(x-0.5, tl+up_level, y-0.5),
+								Vector3(x+0.5, tr+up_level, y-0.5),
+								Vector3(x+0.5, br+down_level, y+0.5),
+								Vector3(x-0.5, bl+down_level, y+0.5),
+							]
 						)
+						if not navmesh:
+							_create_tri_face(
+								wall_st,
+								[
+									Vector3(x+0.5, br+down_level, y+0.5),
+									Vector3(x+0.5, tr+up_level, y-0.5),
+									Vector3(x+0.5, br+up_level, y+0.5),
+								]
+							)
+							_create_tri_face(
+								wall_st,
+								[
+									Vector3(x-0.5, tl+up_level, y-0.5),
+									Vector3(x-0.5, bl+down_level, y+0.5),
+									Vector3(x-0.5, bl+up_level, y+0.5),
+								]
+							)
 					RampShape.TO_TOPLEFT:
 						var xform = Transform3D(
 							Basis.from_euler(Vector3(0,0,0)),
@@ -583,9 +639,12 @@ static func generate_mesh(terrain_data, navmesh=false):
 				)
 				
 				if not navmesh:
+					# NOTE: There is some overdraw around ramps, but since the
+					# ramp "cliff_level" is lower than any real cliff level, then
+					# we'll never have holes in the mesh.
 					if cliff_level > up_level:
 						_create_quad_face(
-							st,
+							wall_st,
 							[
 								Vector3(x+0.5, tr+cliff_level, y-0.5),
 								Vector3(x-0.5, tl+cliff_level, y-0.5),
@@ -595,7 +654,7 @@ static func generate_mesh(terrain_data, navmesh=false):
 						)
 					if cliff_level > down_level:
 						_create_quad_face(
-							st,
+							wall_st,
 							[
 								Vector3(x-0.5, bl+cliff_level, y+0.5),
 								Vector3(x+0.5, br+cliff_level, y+0.5),
@@ -605,7 +664,7 @@ static func generate_mesh(terrain_data, navmesh=false):
 						)
 					if cliff_level > left_level:
 						_create_quad_face(
-							st,
+							wall_st,
 							[
 								Vector3(x-0.5, tl+cliff_level, y-0.5),
 								Vector3(x-0.5, bl+cliff_level, y+0.5),
@@ -615,7 +674,7 @@ static func generate_mesh(terrain_data, navmesh=false):
 						)
 					if cliff_level > right_level:
 						_create_quad_face(
-							st,
+							wall_st,
 							[
 								Vector3(x+0.5, br+cliff_level, y+0.5),
 								Vector3(x+0.5, tr+cliff_level, y-0.5),
@@ -624,7 +683,10 @@ static func generate_mesh(terrain_data, navmesh=false):
 							]
 						)
 
-	return st.commit()
+	return {
+		"ground": st.commit(),
+		"wall": wall_st.commit(),
+	}
 
 static func _navmesh_from_mesh(mesh):
 	# The built "NavigationMesh.create_from_mesh" is broken...
@@ -680,21 +742,31 @@ func _regenerate_mesh():
 
 	if width > 0 and height > 0:
 		var mesh = MeshInstance3D.new()
-		mesh.mesh = generate_mesh(terrain, navigation_region_debug)
+		var ret = generate_mesh(terrain, navigation_region_debug)
+		mesh.mesh = ret["ground"]
+		mesh.mesh.surface_set_material(0, ground_material)
 		add_child(mesh)
 		managed_children.append(mesh)
+		
+		var wall_mesh = MeshInstance3D.new()
+		wall_mesh.mesh = ret["wall"]
+		wall_mesh.mesh.surface_set_material(0, wall_material)
+		add_child(wall_mesh)
+		managed_children.append(wall_mesh)
 	
 		# Always generate a physics body in the editor so we can use it for
 		# raycasts when editing the terrain.
 		if generate_static_physics_body or Engine.is_editor_hint():
 			# The docs say this is "mainly used for testing"...
 			mesh.create_trimesh_collision()
-
-			var static_body = mesh.get_children()[0]
-			static_body.connect("input_event", _emit_physics_collider_input_events)
+			if mesh.get_child_count() > 0:
+				mesh.get_children()[0].connect("input_event", _emit_physics_collider_input_events)
+			wall_mesh.create_trimesh_collision()
+			if wall_mesh.get_child_count() > 0:
+				wall_mesh.get_children()[0].connect("input_event", _emit_physics_collider_input_events)
 		
 		if generate_navigation_region:
 			var nav_region = NavigationRegion3D.new()
-			nav_region.navmesh = _navmesh_from_mesh(generate_mesh(terrain, true))
+			nav_region.navmesh = _navmesh_from_mesh(generate_mesh(terrain, true)["ground"])
 			add_child(nav_region)
 			managed_children.append(nav_region)

@@ -8,6 +8,7 @@ enum TerrainTool {
 	REMOVE_RAMP=3,
 	RAISE_TERRAIN=4,
 	LOWER_TERRAIN=5,
+	SMOOTH_TERRAIN=6,
 }
 
 signal tool_changed(tool: TerrainTool)
@@ -41,3 +42,8 @@ func _on_raise_terrain_pressed():
 func _on_lower_terrain_pressed():
 	print("emitting tool changed LOWER_TERRAIN")
 	emit_signal("tool_changed", TerrainTool.LOWER_TERRAIN)
+
+
+func _on_smooth_terrain_pressed():
+	print("emitting tool changed SMOOTH_TERRAIN")
+	emit_signal("tool_changed", TerrainTool.SMOOTH_TERRAIN)

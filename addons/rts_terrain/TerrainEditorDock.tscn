@@ -45,9 +45,16 @@ offset_right = 1920.0
 offset_bottom = 206.0
 text = "Lower Terrain"
 
+[node name="Smooth Terrain" type="Button" parent="."]
+offset_top = 210.0
+offset_right = 1920.0
+offset_bottom = 241.0
+text = "Smooth Terrain"
+
 [connection signal="pressed" from="Raise Cliff" to="." method="_on_raise_cliff_pressed"]
 [connection signal="pressed" from="Lower Cliff" to="." method="_on_lower_cliff_pressed"]
 [connection signal="pressed" from="Create Ramp" to="." method="_on_create_ramp_pressed"]
 [connection signal="pressed" from="Remove Ramp" to="." method="_on_remove_ramp_pressed"]
 [connection signal="pressed" from="Raise Terrain" to="." method="_on_raise_terrain_pressed"]
 [connection signal="pressed" from="Lower Terrain" to="." method="_on_lower_terrain_pressed"]
+[connection signal="pressed" from="Smooth Terrain" to="." method="_on_smooth_terrain_pressed"]
