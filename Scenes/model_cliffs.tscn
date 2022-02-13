@@ -1,0 +1,85 @@
+[gd_scene load_steps=13 format=3 uid="uid://cjs2bt5vbo4vk"]
+
+[ext_resource type="ArrayMesh" uid="uid://dptr2uru6ysyh" path="res://Assets/Models/cliff_corner_inner.res" id="1_5ldi1"]
+[ext_resource type="Material" uid="uid://cu1fbgyeu3ybv" path="res://Assets/Textures/uv_debug_material.tres" id="2_5ajk2"]
+[ext_resource type="ArrayMesh" uid="uid://dc1kiu6a416u0" path="res://Assets/Models/cliff_corner_outer.res" id="2_e6x0g"]
+[ext_resource type="ArrayMesh" uid="uid://b0n56hgbmhdeo" path="res://Assets/Models/cliff_ramp_lower_left.res" id="3_tq0md"]
+[ext_resource type="ArrayMesh" uid="uid://7enu1krj8q7u" path="res://Assets/Models/cliff_ramp_lower_right.res" id="4_3dljp"]
+[ext_resource type="ArrayMesh" uid="uid://bxibin3tl2qa8" path="res://Assets/Models/cliff_ramp_upper_left.res" id="5_36qhk"]
+[ext_resource type="ArrayMesh" uid="uid://bo2wk4jomkeul" path="res://Assets/Models/cliff_ramp_upper_right.res" id="6_mei28"]
+[ext_resource type="ArrayMesh" uid="uid://ceel0pbh8ecwm" path="res://Assets/Models/cliff_side_1.res" id="7_nggku"]
+[ext_resource type="ArrayMesh" uid="uid://b60gwmtxsso6x" path="res://Assets/Models/cliff_side_2.res" id="8_0tgag"]
+[ext_resource type="PackedScene" uid="uid://bq3vodcjtas42" path="res://addons/rts_terrain/RtsTerrain.tscn" id="9_fbr5b"]
+[ext_resource type="Texture2D" uid="uid://c10m4uwlay2tt" path="res://Assets/Textures/grass.png" id="10_e662u"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_d7gpk"]
+albedo_texture = ExtResource( "10_e662u" )
+texture_filter = 0
+
+[node name="Node3D" type="Node3D"]
+
+[node name="Cliff 1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.31134e-07, 0, -1, 0, 1, 0, 1, 0, 1.31134e-07, 11, 0, 12)
+shader_params/top_left = 0.0
+mesh = ExtResource( "1_5ldi1" )
+surface_material_override/0 = ExtResource( "2_5ajk2" )
+
+[node name="Cliff 2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.31134e-07, 0, -1, 0, 1, 0, 1, 0, 1.31134e-07, 11, 0, 6)
+shader_params/bottom_right = 0.4
+shader_params/top_left = 0.0
+mesh = ExtResource( "2_e6x0g" )
+surface_material_override/0 = ExtResource( "2_5ajk2" )
+
+[node name="Cliff 3" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.31134e-07, 0, -1, 0, 1, 0, 1, 0, 1.31134e-07, 10, 0, 8)
+shader_params/bottom_left = 0.0
+shader_params/top_left = 0.0
+mesh = ExtResource( "3_tq0md" )
+surface_material_override/0 = ExtResource( "2_5ajk2" )
+
+[node name="Cliff 4" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.31134e-07, 0, -1, 0, 1, 0, 1, 0, 1.31134e-07, 10, 0, 10)
+shader_params/top_left = 0.0
+mesh = ExtResource( "4_3dljp" )
+surface_material_override/0 = ExtResource( "2_5ajk2" )
+
+[node name="Cliff 5" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.31134e-07, 0, -1, 0, 1, 0, 1, 0, 1.31134e-07, 11, 0, 8)
+shader_params/bottom_right = 0.4
+shader_params/top_left = 0.0
+shader_params/top_right = 0.4
+mesh = ExtResource( "5_36qhk" )
+surface_material_override/0 = ExtResource( "2_5ajk2" )
+
+[node name="Cliff 6" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.31134e-07, 0, -1, 0, 1, 0, 1, 0, 1.31134e-07, 11, 0, 10)
+shader_params/bottom_left = 0.0
+shader_params/bottom_right = 0.4
+shader_params/top_left = 0.0
+shader_params/top_right = 0.4
+mesh = ExtResource( "6_mei28" )
+surface_material_override/0 = ExtResource( "2_5ajk2" )
+
+[node name="Cliff 7" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.31134e-07, 0, -1, 0, 1, 0, 1, 0, 1.31134e-07, 11, 0, 11)
+shader_params/top_left = 0.0
+shader_params/top_right = 0.4
+mesh = ExtResource( "7_nggku" )
+surface_material_override/0 = ExtResource( "2_5ajk2" )
+
+[node name="Cliff 8" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.31134e-07, 0, -1, 0, 1, 0, 1, 0, 1.31134e-07, 11, 0, 7)
+shader_params/bottom_right = 0.4
+shader_params/top_left = 0.0
+shader_params/top_right = 0.4
+mesh = ExtResource( "8_0tgag" )
+surface_material_override/0 = ExtResource( "2_5ajk2" )
+
+[node name="RtsTerrain" parent="." instance=ExtResource( "9_fbr5b" )]
+ground_material = SubResource( "StandardMaterial3D_d7gpk" )
+width = 19
+height = 19
+terrain_cliffs = PackedInt32Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+terrain_holes = PackedInt32Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+terrain_height = PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -0.01, 0.4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -0.01, 0.4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -0.5, 0.4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -0.5, 0.4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -0.01, 0.4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -0.01, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)

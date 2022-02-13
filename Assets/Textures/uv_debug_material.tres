@@ -1,0 +1,7 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3 uid="uid://cu1fbgyeu3ybv"]
+
+[ext_resource type="Shader" uid="uid://w6h16lq4ripf" path="res://Assets/Textures/uv_debug.tres" id="1_37tnm"]
+
+[resource]
+render_priority = 0
+shader = ExtResource( "1_37tnm" )

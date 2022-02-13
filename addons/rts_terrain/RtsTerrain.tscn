@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3 uid="uid://bq3vodcjtas42"]
+
+[ext_resource type="Script" path="res://addons/rts_terrain/RtsTerrain.gd" id="1_gvcd5"]
+
+[node name="RtsTerrain" type="Node3D"]
+script = ExtResource( "1_gvcd5" )
+width = 1
+height = 1
+terrain_cliffs = PackedInt32Array(0)
+terrain_holes = PackedInt32Array(0)
+terrain_height = PackedFloat32Array(0, 0, 0, 0)

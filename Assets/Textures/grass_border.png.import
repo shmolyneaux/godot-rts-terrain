@@ -2,9 +2,9 @@
 
 importer="texture"
 type="StreamTexture2D"
-uid="uid://bdgj0mv5t50gr"
-path.s3tc="res://.godot/imported/selection_circle_8px.png-b69143feb51fa5f074ed22d113c86fef.s3tc.stex"
-path.etc2="res://.godot/imported/selection_circle_8px.png-b69143feb51fa5f074ed22d113c86fef.etc2.stex"
+uid="uid://d3a7cavcgiv8"
+path.s3tc="res://.godot/imported/grass_border.png-9ff109a536c32301ba3fd99bcdc97804.s3tc.stex"
+path.etc2="res://.godot/imported/grass_border.png-9ff109a536c32301ba3fd99bcdc97804.etc2.stex"
 metadata={
 "imported_formats": ["s3tc", "etc2"],
 "vram_texture": true
@@ -12,8 +12,8 @@ metadata={
 
 [deps]
 
-source_file="res://Assets/Textures/selection_circle_8px.png"
-dest_files=["res://.godot/imported/selection_circle_8px.png-b69143feb51fa5f074ed22d113c86fef.s3tc.stex", "res://.godot/imported/selection_circle_8px.png-b69143feb51fa5f074ed22d113c86fef.etc2.stex"]
+source_file="res://Assets/Textures/grass_border.png"
+dest_files=["res://.godot/imported/grass_border.png-9ff109a536c32301ba3fd99bcdc97804.s3tc.stex", "res://.godot/imported/grass_border.png-9ff109a536c32301ba3fd99bcdc97804.etc2.stex"]
 
 [params]
 
