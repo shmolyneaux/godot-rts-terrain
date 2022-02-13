@@ -28,11 +28,11 @@ input_name = "uv2"
 input_name = "world"
 
 [sub_resource type="VisualShaderNodeFloatUniform" id="VisualShaderNodeFloatUniform_ebssx"]
-uniform_name = "TilesetOffsetX"
+uniform_name = "toff_x"
 qualifier = 2
 
 [sub_resource type="VisualShaderNodeFloatUniform" id="VisualShaderNodeFloatUniform_4olrj"]
-uniform_name = "TilesetOffsetY"
+uniform_name = "toff_y"
 qualifier = 2
 
 [sub_resource type="VisualShaderNodeFloatUniform" id="VisualShaderNodeFloatUniform_o2xbx"]
@@ -128,9 +128,10 @@ instance uniform float top_right;
 instance uniform float bottom_left;
 instance uniform float bottom_right;
 instance uniform float TilesetScaleX;
-instance uniform float TilesetOffsetX;
-instance uniform float TilesetOffsetY;
+instance uniform float toff_x;
+instance uniform float toff_y;
 instance uniform float TilesetScaleY;
+uniform sampler2D Ground : hint_albedo, filter_nearest;
 
 
 
@@ -234,7 +235,7 @@ void vertex() {
 
 
 // FloatUniform:13
-	float n_out13p0 = TilesetOffsetX;
+	float n_out13p0 = toff_x;
 
 
 // VectorOp:6
@@ -257,7 +258,7 @@ void vertex() {
 
 
 // FloatUniform:14
-	float n_out14p0 = TilesetOffsetY;
+	float n_out14p0 = toff_y;
 
 
 // FloatOp:19
@@ -280,22 +281,42 @@ void vertex() {
 // Output:0
 	VERTEX = n_out29p0;
 	UV2 = n_out4p0.xy;
+	COLOR.rgb = n_out4p0;
 
 
 }
 
 void fragment() {
-// Input:16
-	vec3 n_out16p0 = COLOR.rgb;
+// ColorConstant:14
+	vec3 n_out14p0 = vec3(0.000000, 0.000000, 0.000000);
+	float n_out14p1 = 1.000000;
+
+
+// Input:9
+	vec3 n_out9p0 = vec3(UV2, 0.0);
+
+
+	vec3 n_out15p0;
+	float n_out15p1;
+// TextureUniform:15
+	{
+		vec4 n_tex_read = texture(Ground, n_out9p0.xy);
+		n_out15p0 = n_tex_read.rgb;
+		n_out15p1 = n_tex_read.a;
+	}
+
+
+// Mix:13
+	vec3 n_out13p0 = mix(n_out14p0, n_out15p0, vec3(n_out15p1));
 
 
 // Output:0
-	ALBEDO = n_out16p0;
+	ALBEDO = n_out13p0;
 
 
 }
 "
-graph_offset = Vector2(-1902.91, -1124.84)
+graph_offset = Vector2(-1360.92, 258.98)
 engine_version = {
 "major": 4,
 "minor": 0
@@ -314,13 +335,13 @@ nodes/vertex/8/position = Vector2(-1600, 240)
 nodes/vertex/12/node = SubResource( "VisualShaderNodeInput_w46pb" )
 nodes/vertex/12/position = Vector2(-2380, 160)
 nodes/vertex/13/node = SubResource( "VisualShaderNodeFloatUniform_ebssx" )
-nodes/vertex/13/position = Vector2(-980, 20)
+nodes/vertex/13/position = Vector2(-980, 60)
 nodes/vertex/14/node = SubResource( "VisualShaderNodeFloatUniform_4olrj" )
-nodes/vertex/14/position = Vector2(-1120, 640)
+nodes/vertex/14/position = Vector2(-1260, 680)
 nodes/vertex/15/node = SubResource( "VisualShaderNodeFloatUniform_o2xbx" )
-nodes/vertex/15/position = Vector2(-580, -40)
+nodes/vertex/15/position = Vector2(-900, -120)
 nodes/vertex/16/node = SubResource( "VisualShaderNodeFloatUniform_j30hx" )
-nodes/vertex/16/position = Vector2(-600, 780)
+nodes/vertex/16/position = Vector2(-960, 820)
 nodes/vertex/17/node = SubResource( "VisualShaderNodeFloatOp_ik5io" )
 nodes/vertex/17/position = Vector2(-562.665, 174.322)
 nodes/vertex/18/node = SubResource( "VisualShaderNodeFloatOp_xljyc" )
@@ -375,9 +396,9 @@ nodes/vertex/35/node = SubResource( "VisualShaderNodeFloatOp_yqrmd" )
 nodes/vertex/35/position = Vector2(-1220, -420)
 nodes/vertex/36/node = SubResource( "VisualShaderNodeVectorDecompose_mm0m3" )
 nodes/vertex/36/position = Vector2(-260, -240)
-nodes/vertex/connections = PackedInt32Array(6, 0, 5, 0, 4, 0, 0, 5, 2, 0, 8, 1, 8, 0, 6, 0, 5, 0, 17, 1, 13, 0, 17, 0, 17, 0, 18, 1, 15, 0, 18, 0, 18, 0, 4, 0, 19, 0, 20, 0, 16, 0, 20, 1, 14, 0, 19, 1, 5, 2, 19, 0, 20, 0, 4, 1, 12, 0, 23, 0, 23, 0, 22, 0, 23, 1, 22, 1, 23, 2, 22, 2, 22, 0, 8, 0, 25, 0, 24, 2, 24, 0, 28, 0, 30, 0, 24, 3, 31, 0, 24, 4, 32, 0, 24, 5, 29, 0, 0, 0, 28, 0, 29, 1, 27, 0, 34, 0, 27, 2, 35, 0, 34, 0, 24, 0, 35, 0, 24, 1, 8, 0, 27, 0, 26, 0, 36, 0, 36, 0, 29, 0, 36, 2, 29, 2, 36, 1, 28, 1)
+nodes/vertex/connections = PackedInt32Array(6, 0, 5, 0, 4, 0, 0, 5, 2, 0, 8, 1, 8, 0, 6, 0, 5, 0, 17, 1, 17, 0, 18, 1, 18, 0, 4, 0, 19, 0, 20, 0, 5, 2, 19, 0, 20, 0, 4, 1, 12, 0, 23, 0, 23, 0, 22, 0, 23, 1, 22, 1, 23, 2, 22, 2, 22, 0, 8, 0, 25, 0, 24, 2, 24, 0, 28, 0, 30, 0, 24, 3, 31, 0, 24, 4, 32, 0, 24, 5, 29, 0, 0, 0, 28, 0, 29, 1, 27, 0, 34, 0, 27, 2, 35, 0, 34, 0, 24, 0, 35, 0, 24, 1, 8, 0, 27, 0, 26, 0, 36, 0, 36, 0, 29, 0, 36, 2, 29, 2, 36, 1, 28, 1, 4, 0, 0, 6, 14, 0, 19, 1, 13, 0, 17, 0, 15, 0, 18, 0, 16, 0, 20, 1)
 nodes/fragment/9/node = SubResource( "VisualShaderNodeInput_gpatj" )
-nodes/fragment/9/position = Vector2(-780, -220)
+nodes/fragment/9/position = Vector2(-1040, -140)
 nodes/fragment/12/node = SubResource( "VisualShaderNodeTexture_tdxox" )
 nodes/fragment/12/position = Vector2(-260, -160)
 nodes/fragment/13/node = SubResource( "VisualShaderNodeMix_bma84" )
@@ -388,4 +409,4 @@ nodes/fragment/15/node = SubResource( "VisualShaderNodeTextureUniform_tl8o6" )
 nodes/fragment/15/position = Vector2(-597.946, 22.7661)
 nodes/fragment/16/node = SubResource( "VisualShaderNodeInput_wo2tt" )
 nodes/fragment/16/position = Vector2(20, 340)
-nodes/fragment/connections = PackedInt32Array(9, 0, 12, 0, 14, 0, 13, 0, 9, 0, 15, 0, 15, 0, 13, 1, 15, 1, 13, 2, 16, 0, 0, 0)
+nodes/fragment/connections = PackedInt32Array(9, 0, 12, 0, 14, 0, 13, 0, 9, 0, 15, 0, 15, 0, 13, 1, 15, 1, 13, 2, 13, 0, 0, 0)

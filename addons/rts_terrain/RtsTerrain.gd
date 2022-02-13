@@ -4,9 +4,38 @@ extends Node3D
 
 const RAMP = -1
 
-@export var ground_material: Material = null
-@export var wall_material: Material = null
+const ROTATION_MASK = 0b011_00000_00000000_00000000_00000000
+enum {
+	ROT_0=0b000_00000_00000000_00000000_00000000,
+	ROT_90=0b001_00000_00000000_00000000_00000000,
+	ROT_180=0b010_00000_00000000_00000000_00000000,
+	ROT_270=0b011_00000_00000000_00000000_00000000,
+}
 
+const MODEL_MASK = 0b0000_1111_00000000_00000000_00000000
+enum {
+	NO_MODEL=          0b0000_0000_00000000_00000000_00000000,
+	RAMP_LOWER_LEFT=   0b0000_0001_00000000_00000000_00000000,
+	RAMP_LOWER_RIGHT=  0b0000_0010_00000000_00000000_00000000,
+	RAMP_UPPER_LEFT=   0b0000_0011_00000000_00000000_00000000,
+	RAMP_UPPER_RIGHT=  0b0000_0100_00000000_00000000_00000000,
+	CLIFF_SIDE=        0b0000_0101_00000000_00000000_00000000,
+	CLIFF_CORNER_OUTER=0b0000_0110_00000000_00000000_00000000,
+	CLIFF_CORNER_INNER=0b0000_0111_00000000_00000000_00000000,
+	RAMP_LOWER=        0b0000_1000_00000000_00000000_00000000,
+	RAMP_UPPER=        0b0000_1001_00000000_00000000_00000000,
+}
+
+const CLIFF_LEVEL_MASK = 0b00000000_00000000_00000000_11111111
+
+@export var material: Material = null
+@export var outer_corner: Mesh = null
+@export var inner_corner: Mesh = null
+@export var side: Mesh = null
+@export var upper_left_ramp: Mesh = null
+@export var upper_right_ramp: Mesh = null
+@export var lower_left_ramp: Mesh = null
+@export var lower_right_ramp: Mesh = null
 @export var generate_navigation_region: bool = true
 @export var generate_static_physics_body: bool = true
 @export var navigation_region_debug: bool = false:
@@ -15,6 +44,7 @@ const RAMP = -1
 	set(v):
 		navigation_region_debug = v
 		_regenerate_mesh()
+
 
 var managed_children = []
 
@@ -64,6 +94,9 @@ var terrain = TerrainData.new()
 		else:
 			terrain.heightmap = v
 			_regenerate_mesh()
+
+
+var placeholder_mesh = BoxMesh.new()
 
 signal input_event(camera: Node, event: InputEvent, position: Vector3, normal: Vector3)
 
@@ -131,7 +164,7 @@ func set_height(x: int, y: int, value: float):
 	_regenerate_mesh()
 
 static func _create_tri_face(
-	st: SurfaceTool,
+	sts: Array,
 	points: Array,
 	uvs: Array = [
 		Vector2(0, 0),
@@ -142,20 +175,21 @@ static func _create_tri_face(
 	assert(points.size() == 3)
 	var normal = (points[0] - points[1]).cross(points[2] - points[0]).normalized()
 	
-	for idx in range(3):
-		st.set_normal(normal)
-		st.set_uv(uvs[idx])
-		st.add_vertex(points[idx])
+	for st in sts:
+		for idx in range(3):
+			st.set_normal(normal)
+			st.set_uv(uvs[idx])
+			st.add_vertex(points[idx])
 
 
 static func _create_quad_face(
-	st: SurfaceTool,
+	sts: Array,
 	points: Array
 ):
 	assert(points.size() == 4)
 	var height = (points[0] - points[3]).length()
 	_create_tri_face(
-		st,
+		sts,
 		[points[0], points[1], points[3]],
 		[
 			Vector2(0, 0),
@@ -164,7 +198,7 @@ static func _create_quad_face(
 		],
 	)
 	_create_tri_face(
-		st,
+		sts,
 		[points[2], points[3], points[1]],
 		[
 			Vector2(1, height),
@@ -174,27 +208,6 @@ static func _create_quad_face(
 	)
 
 
-static func _create_square(
-	st: SurfaceTool,
-	center: Vector3,
-	size: float,
-	rot: Vector3,
-	vscale: float = 1.0
-):
-	var half_size = size*0.5
-	var new_basis = Basis.from_euler(rot).scaled(Vector3(1.0, vscale, 1.0))
-	var xform = Transform3D(new_basis, center)
-	_create_quad_face(
-		st,
-		[
-			xform * Vector3(-half_size, 0, -half_size),
-			xform * Vector3(half_size, 0, -half_size),
-			xform * Vector3(half_size, 0, half_size),
-			xform * Vector3(-half_size, 0, half_size)
-		]
-	)
-	
-	
 static func _create_ramp(
 	st,
 	xform,
@@ -366,6 +379,15 @@ class TerrainData:
 		var idx = x + y*width
 		return _data[idx]
 		
+	func get_data(x: int, y: int) -> int:
+		if x < 0 or width <= x:
+			return 0
+		if y < 0 or height <= y:
+			return 0
+
+		var idx = x + y*width
+		return _data[idx]
+		
 	func set_hole(x: int, y: int, value: int):
 		if x < 0 or width <= x:
 			print(x, " ", y, " out of range")
@@ -408,284 +430,197 @@ class TerrainData:
 		return _heightmap[idx]
 
 
-enum RampShape {
-	TO_UP,
-	TO_DOWN,
-	TO_LEFT,
-	TO_RIGHT,
-	TO_TOPLEFT,
-	TO_TOPRIGHT,
-	TO_BOTTOMLEFT,
-	TO_BOTTOMRIGHT,
-	ERROR
-}
-
-static func ramp_dir(
-	up,
-	down,
-	left,
-	right
-):
-	var highest = max(up, down, left, right)
+static func ramp_offset(model, rotation):
+	var tl = 0.0
+	var tr = 0.0
+	var bl = 0.0
+	var br = 0.0
+	match model:
+		RAMP_UPPER:
+			tl = 1.0
+			tr = 1.0
+			bl = 0.5
+			br = 0.5
+		RAMP_LOWER:
+			tl = 0.5
+			tr = 0.5
 	
-	up = int(up == highest)
-	down = int(down == highest)
-	left = int(left == highest)
-	right = int(right == highest)
+	match rotation:
+		ROT_90:
+			return {
+				"tl": bl,
+				"tr": tl,
+				"bl": br,
+				"br": tr,
+			}
+		ROT_180:
+			return {
+				"tl": br,
+				"tr": bl,
+				"bl": tr,
+				"br": tl,
+			}
+		ROT_270:
+			return {
+				"tl": tr,
+				"tr": br,
+				"bl": tl,
+				"br": bl,
+			}
 	
-	match [up, down, left, right]:
-		[1, 0, 0, 0]:
-			return RampShape.TO_UP
-		[1, 0, 1, 1]:
-			return RampShape.TO_UP
-		[0, 1, 0, 0]:
-			return RampShape.TO_DOWN
-		[0, 1, 1, 1]:
-			return RampShape.TO_DOWN
-		[0, 0, 1, 0]:
-			return RampShape.TO_LEFT
-		[1, 1, 1, 0]:
-			return RampShape.TO_LEFT
-		[0, 0, 0, 1]:
-			return RampShape.TO_RIGHT
-		[1, 1, 0, 1]:
-			return RampShape.TO_RIGHT
-		[1, 0, 1, 0]:
-			return RampShape.TO_TOPLEFT
-		[1, 0, 0, 1]:
-			return RampShape.TO_TOPRIGHT
-		[0, 1, 1, 0]:
-			return RampShape.TO_BOTTOMLEFT
-		[0, 1, 0, 1]:
-			return RampShape.TO_BOTTOMRIGHT
-		[1, 1, 1, 1]:
-			# It's flat, we shouldn't need a ramp
-			return RampShape.ERROR
-		[0, 0, 0, 0]:
-			# It's flat, we shouldn't need a ramp
-			return RampShape.ERROR
-		[1, 1, 0 ,0]:
-			# How do you have a ramp go both ways?
-			return RampShape.ERROR
-		[0, 0, 1, 1]:
-			# How do you have a ramp go both ways?
-			return RampShape.ERROR
-	
-	print("Could not match: ", up, down, left, right)
-	return RampShape.ERROR
+	return {
+		"tl": tl,
+		"tr": tr,
+		"bl": bl,
+		"br": br,
+	}
 
-static func generate_mesh(terrain_data, navmesh=false):
-	var st = SurfaceTool.new()
-	var wall_st = SurfaceTool.new()
+func generate_mesh(terrain_data):
+	var mesh_instances = []
+	var view_st = SurfaceTool.new()
+	var navmesh_st = SurfaceTool.new()
+	var physics_st = SurfaceTool.new()
 
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	wall_st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	view_st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	navmesh_st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	physics_st.begin(Mesh.PRIMITIVE_TRIANGLES)
 
 	for x in range(terrain_data.width):
 		for y in range(terrain_data.height):
-			var cliff_level = terrain_data.get_cliff_level(x, y)
-			var up_level = terrain_data.get_cliff_level(x, y-1)
-			var down_level = terrain_data.get_cliff_level(x, y+1)
-			var left_level = terrain_data.get_cliff_level(x-1, y)
-			var right_level = terrain_data.get_cliff_level(x+1, y)
-			
+			var tile_data = terrain_data.get_data(x, y)
 			var tl = terrain_data.get_terrain_height(x, y)
 			var tr = terrain_data.get_terrain_height(x+1, y)
 			var bl = terrain_data.get_terrain_height(x, y+1)
 			var br = terrain_data.get_terrain_height(x+1, y+1)
 			
-			if terrain_data.is_hole(x, y) and navmesh:
-				continue
-			
-			if cliff_level == RAMP:
-				var shape = ramp_dir(up_level, down_level, left_level, right_level)
-				match shape:
-					RampShape.TO_RIGHT:
-						_create_quad_face(
-							st,
-							[
-								Vector3(x-0.5, tl+left_level, y-0.5),
-								Vector3(x+0.5, tr+right_level, y-0.5),
-								Vector3(x+0.5, br+right_level, y+0.5),
-								Vector3(x-0.5, bl+left_level, y+0.5),
-							]
-						)
-						if not navmesh:
-							_create_tri_face(
-								wall_st,
-								[
-									Vector3(x+0.5, br+right_level, y+0.5),
-									Vector3(x+0.5, br+left_level, y+0.5),
-									Vector3(x-0.5, bl+left_level, y+0.5),
-								]
-							)
-							_create_tri_face(
-								wall_st,
-								[
-									Vector3(x+0.5, tr+right_level, y-0.5),
-									Vector3(x-0.5, tl+left_level, y-0.5),
-									Vector3(x+0.5, tr+left_level, y-0.5),
-								]
-							)
-					RampShape.TO_LEFT:
-						var xform = Transform3D(
-							Basis.from_euler(Vector3(0,PI/2,0)),
-							Vector3(x, 0, y),
-						)
-						_create_ramp(
-							st,
-							xform,
-							navmesh or down_level == RAMP or down_level == left_level,
-							navmesh or up_level == RAMP or up_level == left_level
-						)
-					RampShape.TO_UP:
-						var xform = Transform3D(
-							Basis.from_euler(Vector3(0,0,0)),
-							Vector3(x, 0, y),
-						)
-						_create_ramp(
-							st,
-							xform,
-							navmesh or left_level == RAMP or left_level == up_level,
-							navmesh or right_level == RAMP or right_level == up_level,
-						)
-					RampShape.TO_DOWN:
-						_create_quad_face(
-							st,
-							[
-								Vector3(x-0.5, tl+up_level, y-0.5),
-								Vector3(x+0.5, tr+up_level, y-0.5),
-								Vector3(x+0.5, br+down_level, y+0.5),
-								Vector3(x-0.5, bl+down_level, y+0.5),
-							]
-						)
-						if not navmesh:
-							_create_tri_face(
-								wall_st,
-								[
-									Vector3(x+0.5, br+down_level, y+0.5),
-									Vector3(x+0.5, tr+up_level, y-0.5),
-									Vector3(x+0.5, br+up_level, y+0.5),
-								]
-							)
-							_create_tri_face(
-								wall_st,
-								[
-									Vector3(x-0.5, tl+up_level, y-0.5),
-									Vector3(x-0.5, bl+down_level, y+0.5),
-									Vector3(x-0.5, bl+up_level, y+0.5),
-								]
-							)
-					RampShape.TO_TOPLEFT:
-						var xform = Transform3D(
-							Basis.from_euler(Vector3(0,0,0)),
-							Vector3(x, 0, y),
-						)
-						_create_ramp_corner(
-							st,
-							xform,
-							navmesh or down_level == RAMP,
-							navmesh or right_level == RAMP,
-						)
-					RampShape.TO_TOPRIGHT:
-						var xform = Transform3D(
-							Basis.from_euler(Vector3(0,-PI/2,0)),
-							Vector3(x, 0, y),
-						)
-						_create_ramp_corner(
-							st,
-							xform,
-							navmesh or left_level == RAMP,
-							navmesh or down_level == RAMP,
-						)
-					RampShape.TO_BOTTOMRIGHT:
-						var xform = Transform3D(
-							Basis.from_euler(Vector3(0,PI,0)),
-							Vector3(x, 0, y),
-						)
-						_create_ramp_corner(
-							st,
-							xform,
-							navmesh or up_level == RAMP,
-							navmesh or left_level == RAMP,
-						)
-					RampShape.TO_BOTTOMLEFT:
-						var xform = Transform3D(
-							Basis.from_euler(Vector3(0,PI/2,0)),
-							Vector3(x, 0, y),
-						)
-						_create_ramp_corner(
-							st,
-							xform,
-							navmesh or right_level == RAMP,
-							navmesh or up_level == RAMP,
-						)
-					RampShape.ERROR:
-						_create_square(
-							st,
-							Vector3(x, 0.5, y),
-							1.0,
-							Vector3(0, 0, 0)
-						)
+			var cliff_level = tile_data & 0b111
+			var ground_sts = [physics_st]
+			var model = tile_data & MODEL_MASK
+			var rotation = tile_data & ROTATION_MASK
+			if model in [NO_MODEL, RAMP_UPPER, RAMP_LOWER]:
+				ground_sts.append(view_st)
+				if not terrain_data.is_hole(x, y):
+					ground_sts.append(navmesh_st)
 			else:
-				_create_quad_face(
-					st,
-					[
-						Vector3(x-0.5, tl+cliff_level, y-0.5),
-						Vector3(x+0.5, tr+cliff_level, y-0.5),
-						Vector3(x+0.5, br+cliff_level, y+0.5),
-						Vector3(x-0.5, bl+cliff_level, y+0.5)
-					]
-				)
+				var mesh
+				var tile = Vector2(1, 1)
+				if model == CLIFF_CORNER_OUTER:
+					mesh = outer_corner
+					if rotation == ROT_0:
+						tile = Vector2(0, 1)
+					elif rotation == ROT_90:
+						tile = Vector2(0, 0)
+					elif rotation == ROT_180:
+						tile = Vector2(4, 0)
+					elif rotation == ROT_270:
+						tile = Vector2(4, 1)
+				elif model == CLIFF_CORNER_INNER:
+					mesh = inner_corner
+					if rotation == ROT_0:
+						tile = Vector2(1, 1)
+					elif rotation == ROT_90:
+						tile = Vector2(1, 0)
+					elif rotation == ROT_180:
+						tile = Vector2(2, 0)
+					elif rotation == ROT_270:
+						tile = Vector2(2, 1)
+				elif model == CLIFF_SIDE:
+					mesh = side
+					if rotation == ROT_0:
+						tile = Vector2(3, 1)
+					elif rotation == ROT_90:
+						tile = Vector2(1, 2)
+					elif rotation == ROT_180:
+						tile = Vector2(3, 0)
+					elif rotation == ROT_270:
+						tile = Vector2(2, 2)
+				elif model == RAMP_UPPER_LEFT:
+					mesh = upper_left_ramp
+					if rotation == ROT_0:
+						tile = Vector2(1, 1)
+					elif rotation == ROT_90:
+						tile = Vector2(1, 0)
+					elif rotation == ROT_180:
+						tile = Vector2(2, 0)
+					elif rotation == ROT_270:
+						tile = Vector2(2, 1)
+				elif model == RAMP_UPPER_RIGHT:
+					mesh = upper_right_ramp
+					if rotation == ROT_0:
+						tile = Vector2(2, 1)
+					elif rotation == ROT_90:
+						tile = Vector2(1, 1)
+					elif rotation == ROT_180:
+						tile = Vector2(1, 0)
+					elif rotation == ROT_270:
+						tile = Vector2(2, 0)
+				elif model == RAMP_LOWER_LEFT:
+					mesh = lower_left_ramp
+					if rotation == ROT_0:
+						tile = Vector2(1, 2)
+					elif rotation == ROT_90:
+						tile = Vector2(3, 0)
+					elif rotation == ROT_180:
+						tile = Vector2(2, 2)
+					elif rotation == ROT_270:
+						tile = Vector2(3, 1)
+				elif model == RAMP_LOWER_RIGHT:
+					mesh = lower_right_ramp
+					if rotation == ROT_0:
+						tile = Vector2(2, 2)
+					elif rotation == ROT_90:
+						tile = Vector2(3, 1)
+					elif rotation == ROT_180:
+						tile = Vector2(1, 2)
+					elif rotation == ROT_270:
+						tile = Vector2(3, 0)
+				else:
+					mesh = BoxMesh.new()
+					mesh.size = Vector3(0.6, 0.6, 0.6)
+				# This is where we'd figure out what model to show
+				var mesh_node = MeshInstance3D.new()
+				mesh_node.mesh = mesh
+				mesh_node.set_surface_override_material(0, material)
+				mesh_node.set_shader_instance_uniform("TilesetScaleX", 0.2)
+				mesh_node.set_shader_instance_uniform("TilesetScaleY", 1.0/3.0)
+				mesh_node.set_shader_instance_uniform("toff_x", tile.x)
+				mesh_node.set_shader_instance_uniform("toff_y", tile.y)
 				
-				if not navmesh:
-					# NOTE: There is some overdraw around ramps, but since the
-					# ramp "cliff_level" is lower than any real cliff level, then
-					# we'll never have holes in the mesh.
-					if cliff_level > up_level:
-						_create_quad_face(
-							wall_st,
-							[
-								Vector3(x+0.5, tr+cliff_level, y-0.5),
-								Vector3(x-0.5, tl+cliff_level, y-0.5),
-								Vector3(x-0.5, tl+up_level, y-0.5),
-								Vector3(x+0.5, tr+up_level, y-0.5)
-							]
-						)
-					if cliff_level > down_level:
-						_create_quad_face(
-							wall_st,
-							[
-								Vector3(x-0.5, bl+cliff_level, y+0.5),
-								Vector3(x+0.5, br+cliff_level, y+0.5),
-								Vector3(x+0.5, br+down_level, y+0.5),
-								Vector3(x-0.5, bl+down_level, y+0.5)
-							]
-						)
-					if cliff_level > left_level:
-						_create_quad_face(
-							wall_st,
-							[
-								Vector3(x-0.5, tl+cliff_level, y-0.5),
-								Vector3(x-0.5, bl+cliff_level, y+0.5),
-								Vector3(x-0.5, bl+left_level, y+0.5),
-								Vector3(x-0.5, tl+left_level, y-0.5)
-							]
-						)
-					if cliff_level > right_level:
-						_create_quad_face(
-							wall_st,
-							[
-								Vector3(x+0.5, br+cliff_level, y+0.5),
-								Vector3(x+0.5, tr+cliff_level, y-0.5),
-								Vector3(x+0.5, tr+right_level, y-0.5),
-								Vector3(x+0.5, br+right_level, y+0.5)
-							]
-						)
+				mesh_node.translate(Vector3(x, 0, y))
+				# These go down so that the rotations are clockwise
+				if rotation == ROT_90:
+					mesh_node.rotate(Vector3.DOWN, PI*0.5)
+				elif rotation == ROT_180:
+					mesh_node.rotate(Vector3.DOWN, PI)
+				elif rotation == ROT_270:
+					mesh_node.rotate(Vector3.DOWN, PI*1.5)
+					
+				mesh_instances.append(mesh_node)
+			
+			var offsets = ramp_offset(model, rotation)
+			tl += offsets["tl"]
+			tr += offsets["tr"]
+			bl += offsets["bl"]
+			br += offsets["br"]
+			_create_quad_face(
+				ground_sts,
+				[
+					Vector3(x-0.5, tl+cliff_level, y-0.5),
+					Vector3(x+0.5, tr+cliff_level, y-0.5),
+					Vector3(x+0.5, br+cliff_level, y+0.5),
+					Vector3(x-0.5, bl+cliff_level, y+0.5)
+				]
+			)
 
+			# TODO: physics mesh for walls
+			
+	var mesh_node = MeshInstance3D.new()
+	mesh_node.mesh = view_st.commit()
+	mesh_instances.append(mesh_node)
 	return {
-		"ground": st.commit(),
-		"wall": wall_st.commit(),
+		"mesh_instances": mesh_instances,
+		"navmesh": navmesh_st.commit(),
+		"physics": physics_st.commit(),
 	}
 
 static func _navmesh_from_mesh(mesh):
@@ -741,32 +676,30 @@ func _regenerate_mesh():
 	notify_property_list_changed()
 
 	if width > 0 and height > 0:
-		var mesh = MeshInstance3D.new()
-		var ret = generate_mesh(terrain, navigation_region_debug)
-		mesh.mesh = ret["ground"]
-		mesh.mesh.surface_set_material(0, ground_material)
-		add_child(mesh)
-		managed_children.append(mesh)
-		
-		var wall_mesh = MeshInstance3D.new()
-		wall_mesh.mesh = ret["wall"]
-		wall_mesh.mesh.surface_set_material(0, wall_material)
-		add_child(wall_mesh)
-		managed_children.append(wall_mesh)
+		var ret = generate_mesh(terrain)
+		for mesh_node in ret["mesh_instances"]:
+
+			add_child(mesh_node)
+			managed_children.append(mesh_node)
 	
 		# Always generate a physics body in the editor so we can use it for
 		# raycasts when editing the terrain.
 		if generate_static_physics_body or Engine.is_editor_hint():
+			var physics_mesh_node = MeshInstance3D.new()
+			physics_mesh_node.mesh = ret["physics"]
+			add_child(physics_mesh_node)
+			managed_children.append(physics_mesh_node)
+
 			# The docs say this is "mainly used for testing"...
-			mesh.create_trimesh_collision()
-			if mesh.get_child_count() > 0:
-				mesh.get_children()[0].connect("input_event", _emit_physics_collider_input_events)
-			wall_mesh.create_trimesh_collision()
-			if wall_mesh.get_child_count() > 0:
-				wall_mesh.get_children()[0].connect("input_event", _emit_physics_collider_input_events)
+			physics_mesh_node.create_trimesh_collision()
+			if physics_mesh_node.get_child_count() > 0:
+				physics_mesh_node.get_children()[0].connect("input_event", _emit_physics_collider_input_events)
+				
+			# Now remove the mesh (since we didn't really want to show it in the first place)
+			physics_mesh_node.mesh = null
 		
 		if generate_navigation_region:
 			var nav_region = NavigationRegion3D.new()
-			nav_region.navmesh = _navmesh_from_mesh(generate_mesh(terrain, true)["ground"])
+			nav_region.navmesh = _navmesh_from_mesh(ret["navmesh"])
 			add_child(nav_region)
 			managed_children.append(nav_region)

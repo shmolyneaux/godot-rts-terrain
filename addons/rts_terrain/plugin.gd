@@ -105,32 +105,17 @@ func _forward_3d_gui_input(viewport_camera: Camera3D, event):
 					active_tile.y,
 					set_cliff_level
 				)
-			if active_tool == TerrainTool.LOWER_CLIFF:
-				# NOTE: member variable
-				set_cliff_level = editing_object.get_cliff(active_tile.x, active_tile.y)
-				if set_cliff_level == -1:
-					set_cliff_level = ramp_removal_cliff_level
-				else:
-					set_cliff_level = max(set_cliff_level - 1, 0)
-				
+
+			if active_tool in [
+				TerrainTool.RAISE_CLIFF,
+				TerrainTool.LOWER_CLIFF,
+				TerrainTool.CREATE_RAMP,
+				TerrainTool.REMOVE_RAMP,
+			]:
 				editing_object.set_cliff(
 					active_tile.x,
 					active_tile.y,
-					set_cliff_level
-				)
-			if active_tool == TerrainTool.CREATE_RAMP:
-				set_cliff_level = -1
-				editing_object.set_cliff(
-					active_tile.x,
-					active_tile.y,
-					-1
-				)
-			if active_tool == TerrainTool.REMOVE_RAMP:
-				set_cliff_level = ramp_removal_cliff_level
-				editing_object.set_cliff(
-					active_tile.x,
-					active_tile.y,
-					ramp_removal_cliff_level
+					editor_dock.data_value
 				)
 			if active_tool == TerrainTool.RAISE_TERRAIN:
 				var new_height
@@ -184,7 +169,7 @@ func _physics_process(delta):
 						editing_object.set_cliff(
 							active_tile.x,
 							active_tile.y,
-							set_cliff_level
+							editor_dock.data_value
 						)
 					
 					if active_tool == TerrainTool.RAISE_TERRAIN:

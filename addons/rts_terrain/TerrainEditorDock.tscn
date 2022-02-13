@@ -1,6 +1,8 @@
-[gd_scene load_steps=2 format=3 uid="uid://fhhseug7o7mg"]
+[gd_scene load_steps=4 format=3 uid="uid://fhhseug7o7mg"]
 
 [ext_resource type="Script" path="res://addons/rts_terrain/TerrainEditorDock.gd" id="1_mwj6q"]
+[ext_resource type="ButtonGroup" uid="uid://daioqgkyo551c" path="res://addons/rts_terrain/dock_rotation_button_group.tres" id="2_bdnr1"]
+[ext_resource type="ButtonGroup" uid="uid://defhqfqqb5buc" path="res://addons/rts_terrain/dock_model_button_group.tres" id="3_xiw3c"]
 
 [node name="RTS Terrain" type="VBoxContainer"]
 anchor_right = 1.0
@@ -10,51 +12,250 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="Raise Cliff" type="Button" parent="."]
+[node name="debug" type="Label" parent="."]
+offset_right = 1920.0
+offset_bottom = 26.0
+text = "Raw Value"
+
+[node name="data_container" type="HBoxContainer" parent="."]
+offset_top = 30.0
+offset_right = 1920.0
+offset_bottom = 56.0
+
+[node name="data" type="Label" parent="data_container"]
+offset_right = 56.0
+offset_bottom = 26.0
+text = "Data:    "
+
+[node name="data_value" type="Label" parent="data_container"]
+offset_left = 60.0
+offset_top = 1.0
+offset_right = 61.0
+offset_bottom = 24.0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+offset_top = 60.0
+offset_right = 1920.0
+offset_bottom = 91.0
+
+[node name="ROT_0" type="Button" parent="HBoxContainer"]
+offset_right = 477.0
+offset_bottom = 31.0
+rect_min_size = Vector2(25, 0)
+size_flags_horizontal = 3
+toggle_mode = true
+button_pressed = true
+button_group = ExtResource( "2_bdnr1" )
+text = "0"
+
+[node name="ROT_90" type="Button" parent="HBoxContainer"]
+offset_left = 481.0
+offset_right = 958.0
+offset_bottom = 31.0
+size_flags_horizontal = 3
+toggle_mode = true
+button_group = ExtResource( "2_bdnr1" )
+text = "90"
+
+[node name="ROT_180" type="Button" parent="HBoxContainer"]
+offset_left = 962.0
+offset_right = 1439.0
+offset_bottom = 31.0
+size_flags_horizontal = 3
+toggle_mode = true
+button_group = ExtResource( "2_bdnr1" )
+text = "180"
+
+[node name="ROT_270" type="Button" parent="HBoxContainer"]
+offset_left = 1443.0
 offset_right = 1920.0
 offset_bottom = 31.0
-text = "Raise Cliff"
+size_flags_horizontal = 3
+toggle_mode = true
+button_group = ExtResource( "2_bdnr1" )
+text = "270"
 
-[node name="Lower Cliff" type="Button" parent="."]
-offset_top = 35.0
+[node name="Cliff Level" type="HBoxContainer" parent="."]
+offset_top = 95.0
 offset_right = 1920.0
-offset_bottom = 66.0
-text = "Lower Cliff"
+offset_bottom = 126.0
 
-[node name="Create Ramp" type="Button" parent="."]
-offset_top = 70.0
-offset_right = 1920.0
-offset_bottom = 101.0
-text = "Create Ramp"
+[node name="Lower Cliff" type="Button" parent="Cliff Level"]
+offset_right = 958.0
+offset_bottom = 31.0
+size_flags_horizontal = 3
+text = "Lower"
 
-[node name="Remove Ramp" type="Button" parent="."]
-offset_top = 105.0
+[node name="Raise Cliff" type="Button" parent="Cliff Level"]
+offset_left = 962.0
 offset_right = 1920.0
-offset_bottom = 136.0
-text = "Remove Ramp"
+offset_bottom = 31.0
+size_flags_horizontal = 3
+text = "Raise"
+
+[node name="Side" type="Button" parent="."]
+offset_top = 130.0
+offset_right = 1920.0
+offset_bottom = 161.0
+toggle_mode = true
+button_group = ExtResource( "3_xiw3c" )
+text = "Side"
+
+[node name="Corners" type="HBoxContainer" parent="."]
+offset_top = 165.0
+offset_right = 1920.0
+offset_bottom = 196.0
+
+[node name="Outer Corner" type="Button" parent="Corners"]
+offset_right = 958.0
+offset_bottom = 31.0
+size_flags_horizontal = 3
+toggle_mode = true
+button_group = ExtResource( "3_xiw3c" )
+text = "Outer"
+
+[node name="Inner Corner" type="Button" parent="Corners"]
+offset_left = 962.0
+offset_right = 1920.0
+offset_bottom = 31.0
+size_flags_horizontal = 3
+toggle_mode = true
+button_group = ExtResource( "3_xiw3c" )
+text = "Inner"
+
+[node name="Upper Ramps" type="HBoxContainer" parent="."]
+offset_top = 200.0
+offset_right = 1920.0
+offset_bottom = 231.0
+
+[node name="UL Ramp" type="Button" parent="Upper Ramps"]
+offset_right = 637.0
+offset_bottom = 31.0
+size_flags_horizontal = 3
+toggle_mode = true
+button_group = ExtResource( "3_xiw3c" )
+text = "UL"
+
+[node name="UM Ramp" type="Button" parent="Upper Ramps"]
+offset_left = 641.0
+offset_right = 1278.0
+offset_bottom = 31.0
+size_flags_horizontal = 3
+toggle_mode = true
+button_group = ExtResource( "3_xiw3c" )
+text = "UM"
+
+[node name="UR Ramp" type="Button" parent="Upper Ramps"]
+offset_left = 1282.0
+offset_right = 1920.0
+offset_bottom = 31.0
+size_flags_horizontal = 3
+toggle_mode = true
+button_group = ExtResource( "3_xiw3c" )
+text = "UR"
+
+[node name="Lower Ramps" type="HBoxContainer" parent="."]
+offset_top = 235.0
+offset_right = 1920.0
+offset_bottom = 266.0
+
+[node name="LL Ramp" type="Button" parent="Lower Ramps"]
+offset_right = 637.0
+offset_bottom = 31.0
+size_flags_horizontal = 3
+toggle_mode = true
+button_group = ExtResource( "3_xiw3c" )
+text = "LL"
+
+[node name="LM Ramp" type="Button" parent="Lower Ramps"]
+offset_left = 641.0
+offset_right = 1278.0
+offset_bottom = 31.0
+size_flags_horizontal = 3
+toggle_mode = true
+button_group = ExtResource( "3_xiw3c" )
+text = "LM"
+
+[node name="LR Ramp" type="Button" parent="Lower Ramps"]
+offset_left = 1282.0
+offset_right = 1920.0
+offset_bottom = 31.0
+size_flags_horizontal = 3
+toggle_mode = true
+button_group = ExtResource( "3_xiw3c" )
+text = "LR"
+
+[node name="Clear" type="Button" parent="."]
+offset_top = 270.0
+offset_right = 1920.0
+offset_bottom = 301.0
+toggle_mode = true
+button_pressed = true
+button_group = ExtResource( "3_xiw3c" )
+text = "Clear"
+
+[node name="HSeparator2" type="HSeparator" parent="."]
+offset_top = 305.0
+offset_right = 1920.0
+offset_bottom = 309.0
+
+[node name="Height Map" type="Label" parent="."]
+offset_top = 313.0
+offset_right = 1920.0
+offset_bottom = 339.0
+text = "Height Map"
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
 [node name="Raise Terrain" type="Button" parent="."]
-offset_top = 140.0
+offset_top = 343.0
 offset_right = 1920.0
-offset_bottom = 171.0
+offset_bottom = 374.0
 text = "Raise Terrain"
 
 [node name="Lower Terrain" type="Button" parent="."]
-offset_top = 175.0
+offset_top = 378.0
 offset_right = 1920.0
-offset_bottom = 206.0
+offset_bottom = 409.0
 text = "Lower Terrain"
 
 [node name="Smooth Terrain" type="Button" parent="."]
-offset_top = 210.0
+offset_top = 413.0
 offset_right = 1920.0
-offset_bottom = 241.0
+offset_bottom = 444.0
 text = "Smooth Terrain"
 
-[connection signal="pressed" from="Raise Cliff" to="." method="_on_raise_cliff_pressed"]
-[connection signal="pressed" from="Lower Cliff" to="." method="_on_lower_cliff_pressed"]
-[connection signal="pressed" from="Create Ramp" to="." method="_on_create_ramp_pressed"]
-[connection signal="pressed" from="Remove Ramp" to="." method="_on_remove_ramp_pressed"]
+[node name="HSeparator" type="HSeparator" parent="."]
+offset_top = 448.0
+offset_right = 1920.0
+offset_bottom = 452.0
+
+[node name="Real Controls" type="Label" parent="."]
+offset_top = 456.0
+offset_right = 1920.0
+offset_bottom = 482.0
+text = "Real Controls"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[connection signal="pressed" from="HBoxContainer/ROT_0" to="." method="_on_rot_0_pressed"]
+[connection signal="pressed" from="HBoxContainer/ROT_90" to="." method="_on_rot_90_pressed"]
+[connection signal="pressed" from="HBoxContainer/ROT_180" to="." method="_on_rot_180_pressed"]
+[connection signal="pressed" from="HBoxContainer/ROT_270" to="." method="_on_rot_270_pressed"]
+[connection signal="pressed" from="Cliff Level/Lower Cliff" to="." method="_on_lower_cliff_pressed"]
+[connection signal="pressed" from="Cliff Level/Raise Cliff" to="." method="_on_raise_cliff_pressed"]
+[connection signal="pressed" from="Side" to="." method="_on_side_pressed"]
+[connection signal="pressed" from="Corners/Outer Corner" to="." method="_on_outer_corner_pressed"]
+[connection signal="pressed" from="Corners/Inner Corner" to="." method="_on_inner_corner_pressed"]
+[connection signal="pressed" from="Upper Ramps/UL Ramp" to="." method="_on_ul_ramp_pressed"]
+[connection signal="pressed" from="Upper Ramps/UM Ramp" to="." method="_on_um_ramp_pressed"]
+[connection signal="pressed" from="Upper Ramps/UR Ramp" to="." method="_on_ur_ramp_pressed"]
+[connection signal="pressed" from="Lower Ramps/LL Ramp" to="." method="_on_ll_ramp_pressed"]
+[connection signal="pressed" from="Lower Ramps/LM Ramp" to="." method="_on_lm_ramp_pressed"]
+[connection signal="pressed" from="Lower Ramps/LR Ramp" to="." method="_on_lr_ramp_pressed"]
+[connection signal="pressed" from="Clear" to="." method="_on_clear_pressed"]
 [connection signal="pressed" from="Raise Terrain" to="." method="_on_raise_terrain_pressed"]
 [connection signal="pressed" from="Lower Terrain" to="." method="_on_lower_terrain_pressed"]
 [connection signal="pressed" from="Smooth Terrain" to="." method="_on_smooth_terrain_pressed"]
