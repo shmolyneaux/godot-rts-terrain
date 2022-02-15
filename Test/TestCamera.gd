@@ -2,6 +2,8 @@ extends Camera3D
 
 @export var speed: float = 5
 
+@onready var target = $"Target Camera Position"
+
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	pass # Replace with function body.
@@ -24,4 +26,10 @@ func _process(delta):
 
 	if move_vec.length() != 0:
 		move_vec = move_vec.normalized() * speed * delta
-		global_transform.origin += move_vec
+		var new_position = target.global_transform.origin + move_vec
+		new_position.x = clamp(new_position.x, 4, 16)
+		new_position.y = clamp(new_position.y, 4, 14)
+		new_position.z = clamp(new_position.z, 4, 18)
+		target.global_transform.origin = new_position
+
+	global_transform.origin = global_transform.origin.lerp(target.global_transform.origin, 0.5)

@@ -29,6 +29,7 @@ enum {
 const CLIFF_LEVEL_MASK = 0b00000000_00000000_00000000_11111111
 
 @export var material: Material = null
+@export var cliff_material: Material = null
 @export var outer_corner: Mesh = null
 @export var inner_corner: Mesh = null
 @export var side: Mesh = null
@@ -494,11 +495,10 @@ func generate_mesh(terrain_data):
 			var br = terrain_data.get_terrain_height(x+1, y+1)
 			
 			var cliff_level = tile_data & 0b111
-			var ground_sts = [physics_st]
+			var ground_sts = [physics_st, view_st]
 			var model = tile_data & MODEL_MASK
 			var rotation = tile_data & ROTATION_MASK
 			if model in [NO_MODEL, RAMP_UPPER, RAMP_LOWER]:
-				ground_sts.append(view_st)
 				if not terrain_data.is_hole(x, y):
 					ground_sts.append(navmesh_st)
 			else:
@@ -580,11 +580,16 @@ func generate_mesh(terrain_data):
 				# This is where we'd figure out what model to show
 				var mesh_node = MeshInstance3D.new()
 				mesh_node.mesh = mesh
-				mesh_node.set_surface_override_material(0, material)
+				mesh_node.set_surface_override_material(0, cliff_material)
 				mesh_node.set_shader_instance_uniform("TilesetScaleX", 0.2)
 				mesh_node.set_shader_instance_uniform("TilesetScaleY", 1.0/3.0)
 				mesh_node.set_shader_instance_uniform("toff_x", tile.x)
 				mesh_node.set_shader_instance_uniform("toff_y", tile.y)
+				
+				mesh_node.set_shader_instance_uniform("top_left", tl)
+				mesh_node.set_shader_instance_uniform("top_right", tr)
+				mesh_node.set_shader_instance_uniform("bottom_left", bl)
+				mesh_node.set_shader_instance_uniform("bottom_right", br)
 				
 				mesh_node.translate(Vector3(x, 0, y))
 				# These go down so that the rotations are clockwise
@@ -615,7 +620,12 @@ func generate_mesh(terrain_data):
 			# TODO: physics mesh for walls
 			
 	var mesh_node = MeshInstance3D.new()
+	view_st.set_material(material)
 	mesh_node.mesh = view_st.commit()
+	mesh_node.set_shader_instance_uniform("TilesetScaleX", 0.2)
+	mesh_node.set_shader_instance_uniform("TilesetScaleY", 1.0/3.0)
+	mesh_node.set_shader_instance_uniform("toff_x", 4.0)
+	mesh_node.set_shader_instance_uniform("toff_y", 2.0)
 	mesh_instances.append(mesh_node)
 	return {
 		"mesh_instances": mesh_instances,
