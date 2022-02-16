@@ -1,4 +1,4 @@
-[gd_scene load_steps=4 format=3 uid="uid://gy0cas5bma04"]
+[gd_scene load_steps=7 format=3 uid="uid://gy0cas5bma04"]
 
 [ext_resource type="Script" path="res://Objects/TestNavigationUnit3D.gd" id="1_1x2ow"]
 
@@ -10,7 +10,19 @@ material = SubResource( "StandardMaterial3D_u2jug" )
 radius = 0.2
 height = 0.4
 
-[node name="TestUnit3D" type="Node3D"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0ghsv"]
+albedo_color = Color(1, 0, 0, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_20av3"]
+material = SubResource( "StandardMaterial3D_0ghsv" )
+radius = 0.05
+height = 0.1
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_ag1v3"]
+radius = 0.2
+height = 1.0
+
+[node name="TestUnit3D" type="CharacterBody3D"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.82288, 0, 4.00034)
 script = ExtResource( "1_1x2ow" )
 
@@ -23,3 +35,14 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.193487, 0)
 layers = 2
 mesh = SubResource( "SphereMesh_5kuk5" )
 skeleton = NodePath("../..")
+
+[node name="Target" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.23882, 0)
+top_level = true
+layers = 2
+mesh = SubResource( "SphereMesh_20av3" )
+skeleton = NodePath("../..")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource( "CapsuleShape3D_ag1v3" )

@@ -39,11 +39,23 @@ const CLIFF_LEVEL_MASK = 0b00000000_00000000_00000000_11111111
 @export var lower_right_ramp: Mesh = null
 @export var generate_navigation_region: bool = true
 @export var generate_static_physics_body: bool = true
-@export var navigation_region_debug: bool = false:
+@export var debug_draw_navigation: bool = false:
 	get:
-		return navigation_region_debug
+		return debug_draw_navigation
 	set(v):
-		navigation_region_debug = v
+		debug_draw_navigation = v
+		_regenerate_mesh()
+@export var debug_draw_collider: bool = false:
+	get:
+		return debug_draw_collider
+	set(v):
+		debug_draw_collider = v
+		_regenerate_mesh()
+@export var hide_decorative_layer: bool = false:
+	get:
+		return hide_decorative_layer
+	set(v):
+		hide_decorative_layer = v
 		_regenerate_mesh()
 
 
@@ -409,6 +421,10 @@ class TerrainData:
 		var idx = x + y*width
 		return _holes[idx]
 		
+	func is_navigable(x: int, y: int):
+		var tile_data = get_data(x, y)
+		var model = tile_data & MODEL_MASK
+		return model in [NO_MODEL, RAMP_LOWER, RAMP_UPPER] and not is_hole(x, y)
 		
 	func set_terrain_height(x: int, y: int, value: float):
 		if x < 0 or width + 1 <= x:
@@ -476,6 +492,26 @@ static func ramp_offset(model, rotation):
 		"br": br,
 	}
 
+
+static func interp_quad(x, y, verts) -> Vector3:
+	assert(verts.size() == 4)
+	var tl = verts[0]
+	var tr = verts[1]
+	var br = verts[2]
+	var bl = verts[3]
+	
+	if (x+y) < 1.0:
+		var bary_a_area = 1.0 - x - y
+		var bary_b_area = x
+		var bary_c_area = y
+		return bary_a_area*tl + bary_b_area*tr + bary_c_area*bl
+	else:
+		var bary_d_area = x + y - 1.0;
+		var bary_b_area = 1.0 - y;
+		var bary_c_area = 1.0 - x;
+		return bary_d_area*br + bary_b_area*tr + bary_c_area*bl
+
+
 func generate_mesh(terrain_data):
 	var mesh_instances = []
 	var view_st = SurfaceTool.new()
@@ -498,10 +534,7 @@ func generate_mesh(terrain_data):
 			var ground_sts = [physics_st, view_st]
 			var model = tile_data & MODEL_MASK
 			var rotation = tile_data & ROTATION_MASK
-			if model in [NO_MODEL, RAMP_UPPER, RAMP_LOWER]:
-				if not terrain_data.is_hole(x, y):
-					ground_sts.append(navmesh_st)
-			else:
+			if model not in [NO_MODEL, RAMP_UPPER, RAMP_LOWER]:
 				var mesh
 				var tile = Vector2(1, 1)
 				if model == CLIFF_CORNER_OUTER:
@@ -601,6 +634,57 @@ func generate_mesh(terrain_data):
 					mesh_node.rotate(Vector3.DOWN, PI*1.5)
 					
 				mesh_instances.append(mesh_node)
+				
+				# Create physics mesh for cliffs
+				# TODO: Remove unnecessary faces
+				# TODO: Make the size of the collider represent the shape of the
+				# cliff rather than cubes
+				
+				_create_quad_face(
+					[physics_st],
+					[
+						Vector3(x-0.5, tl+cliff_level+1.0, y-0.5),
+						Vector3(x+0.5, tr+cliff_level+1.0, y-0.5),
+						Vector3(x+0.5, br+cliff_level+1.0, y+0.5),
+						Vector3(x-0.5, bl+cliff_level+1.0, y+0.5)
+					]
+				)
+				_create_quad_face(
+					[physics_st],
+					[
+						Vector3(x+0.5, tr+cliff_level+1.0, y-0.5),
+						Vector3(x-0.5, tl+cliff_level+1.0, y-0.5),
+						Vector3(x-0.5, tl+cliff_level, y-0.5),
+						Vector3(x+0.5, tr+cliff_level, y-0.5)
+					]
+				)
+				_create_quad_face(
+					[physics_st],
+					[
+						Vector3(x+0.5, br+cliff_level+1.0, y+0.5),
+						Vector3(x+0.5, tr+cliff_level+1.0, y-0.5),
+						Vector3(x+0.5, tr+cliff_level, y-0.5),
+						Vector3(x+0.5, br+cliff_level, y+0.5)
+					]
+				)
+				_create_quad_face(
+					[physics_st],
+					[
+						Vector3(x-0.5, tl+cliff_level+1.0, y-0.5),
+						Vector3(x-0.5, bl+cliff_level+1.0, y+0.5),
+						Vector3(x-0.5, bl+cliff_level, y+0.5),
+						Vector3(x-0.5, tl+cliff_level, y-0.5)
+					]
+				)
+				_create_quad_face(
+					[physics_st],
+					[
+						Vector3(x-0.5, bl+cliff_level+1.0, y+0.5),
+						Vector3(x+0.5, br+cliff_level+1.0, y+0.5),
+						Vector3(x+0.5, br+cliff_level, y+0.5),
+						Vector3(x-0.5, bl+cliff_level, y+0.5)
+					]
+				)
 			
 			var offsets = ramp_offset(model, rotation)
 			tl += offsets["tl"]
@@ -616,8 +700,29 @@ func generate_mesh(terrain_data):
 					Vector3(x-0.5, bl+cliff_level, y+0.5)
 				]
 			)
+			
+			# Navmesh contracts away from obstacles so that reasonbly-sized
+			# units don't get stuck at corners.
+			if terrain_data.is_navigable(x, y):
+				var verts = [
+					Vector3(x-0.5, tl+cliff_level, y-0.5),
+					Vector3(x+0.5, tr+cliff_level, y-0.5),
+					Vector3(x+0.5, br+cliff_level, y+0.5),
+					Vector3(x-0.5, bl+cliff_level, y+0.5)
+				]
+				var poles = [0.0, 0.2, 0.8, 1.0]
+				for u in range(3):
+					for v in range(3):
+						_create_quad_face(
+							[navmesh_st],
+							[
+								interp_quad(poles[u], poles[v], verts),
+								interp_quad(poles[u+1], poles[v], verts),
+								interp_quad(poles[u+1], poles[v+1], verts),
+								interp_quad(poles[u], poles[v+1], verts),
+							]
+						)
 
-			# TODO: physics mesh for walls
 			
 	var mesh_node = MeshInstance3D.new()
 	view_st.set_material(material)
@@ -687,10 +792,10 @@ func _regenerate_mesh():
 
 	if width > 0 and height > 0:
 		var ret = generate_mesh(terrain)
-		for mesh_node in ret["mesh_instances"]:
-
-			add_child(mesh_node)
-			managed_children.append(mesh_node)
+		if not hide_decorative_layer:
+			for mesh_node in ret["mesh_instances"]:
+				add_child(mesh_node)
+				managed_children.append(mesh_node)
 	
 		# Always generate a physics body in the editor so we can use it for
 		# raycasts when editing the terrain.
@@ -706,10 +811,17 @@ func _regenerate_mesh():
 				physics_mesh_node.get_children()[0].connect("input_event", _emit_physics_collider_input_events)
 				
 			# Now remove the mesh (since we didn't really want to show it in the first place)
-			physics_mesh_node.mesh = null
+			if not debug_draw_collider:
+				physics_mesh_node.mesh = null
 		
 		if generate_navigation_region:
 			var nav_region = NavigationRegion3D.new()
 			nav_region.navmesh = _navmesh_from_mesh(ret["navmesh"])
 			add_child(nav_region)
 			managed_children.append(nav_region)
+			
+		if debug_draw_navigation:
+			var navmesh_node = MeshInstance3D.new()
+			navmesh_node.mesh = ret["navmesh"]
+			add_child(navmesh_node)
+			managed_children.append(navmesh_node)
