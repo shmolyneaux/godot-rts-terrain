@@ -1,7 +1,7 @@
 extends CharacterBody3D
 
 var target_location = null
-var speed = 0.1
+var speed = 0.03
 
 @onready var target_debug_ball = $Target
 
@@ -17,6 +17,8 @@ func _physics_process(delta):
 		print("changing target")
 		target_location = potential_new_target
 		$NavigationAgent3D.set_target_location(target_location)
+
+	print($NavigationAgent3D.is_target_reachable())
 
 	if not $NavigationAgent3D.is_target_reached():
 		var move_target = $NavigationAgent3D.get_next_location()

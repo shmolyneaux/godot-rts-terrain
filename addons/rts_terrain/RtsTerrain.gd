@@ -710,18 +710,46 @@ func generate_mesh(terrain_data):
 					Vector3(x+0.5, br+cliff_level, y+0.5),
 					Vector3(x-0.5, bl+cliff_level, y+0.5)
 				]
+				
+				var includes = [Vector2i(1, 1)]
+				# West
+				if terrain_data.is_navigable(x-1, y):
+					includes.append(Vector2i(0, 1))
+				# East
+				if terrain_data.is_navigable(x+1, y):
+					includes.append(Vector2i(2, 1))
+				# North
+				if terrain_data.is_navigable(x, y-1):
+					includes.append(Vector2i(1, 0))
+				# South
+				if terrain_data.is_navigable(x, y+1):
+					includes.append(Vector2i(1, 2))
+				# South-West
+				if terrain_data.is_navigable(x-1, y+1) and terrain_data.is_navigable(x, y+1) and terrain_data.is_navigable(x-1, y):
+					includes.append(Vector2i(0, 2))
+				# North-East
+				if terrain_data.is_navigable(x, y-1) and terrain_data.is_navigable(x+1, y) and terrain_data.is_navigable(x+1, y-1):
+					includes.append(Vector2i(2, 0))
+				# North-West
+				if terrain_data.is_navigable(x, y-1) and terrain_data.is_navigable(x-1, y) and terrain_data.is_navigable(x-1, y-1):
+					includes.append(Vector2i(0, 0))
+				# South-East
+				if terrain_data.is_navigable(x, y+1) and terrain_data.is_navigable(x+1, y) and terrain_data.is_navigable(x+1, y+1):
+					includes.append(Vector2i(2, 2))
+				
 				var poles = [0.0, 0.2, 0.8, 1.0]
 				for u in range(3):
 					for v in range(3):
-						_create_quad_face(
-							[navmesh_st],
-							[
-								interp_quad(poles[u], poles[v], verts),
-								interp_quad(poles[u+1], poles[v], verts),
-								interp_quad(poles[u+1], poles[v+1], verts),
-								interp_quad(poles[u], poles[v+1], verts),
-							]
-						)
+						if Vector2i(u, v) in includes:
+							_create_quad_face(
+								[navmesh_st],
+								[
+									interp_quad(poles[u], poles[v], verts),
+									interp_quad(poles[u+1], poles[v], verts),
+									interp_quad(poles[u+1], poles[v+1], verts),
+									interp_quad(poles[u], poles[v+1], verts),
+								]
+							)
 
 			
 	var mesh_node = MeshInstance3D.new()
