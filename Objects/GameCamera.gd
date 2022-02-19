@@ -1,7 +1,8 @@
 extends Camera3D
 
 @export var speed: float = 5
-
+@export var min_coord: Vector3 = Vector3(4.0, 4.0, 4.0)
+@export var max_coord: Vector3 = Vector3(16.0, 14.0, 18.0)
 @onready var target = $"Target Camera Position"
 
 # Called when the node enters the scene tree for the first time.

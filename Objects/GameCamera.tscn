@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Objects/GameCamera.gd" id="1_qy552"]
+
+[node name="GameCamera" type="Camera3D"]
+transform = Transform3D(1, 0, 0, 0, 0.530674, 0.847576, 0, -0.847576, 0.530674, 10, 7, 9)
+script = ExtResource( "1_qy552" )
+
+[node name="Target Camera Position" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.530674, -0.847576, 0, 0.847576, 0.530674, 0, 0, 0)
+top_level = true

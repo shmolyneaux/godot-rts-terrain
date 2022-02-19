@@ -16,6 +16,7 @@ input_name = "color"
 
 [sub_resource type="VisualShaderNodeTexture" id="VisualShaderNodeTexture_25cya"]
 texture = ExtResource( "1_yf32u" )
+texture_type = 1
 
 [sub_resource type="VisualShaderNodeInput" id="VisualShaderNodeInput_gpatj"]
 input_name = "uv2"
@@ -127,7 +128,7 @@ instance uniform float TilesetScaleX;
 instance uniform float toff_x;
 instance uniform float toff_y;
 instance uniform float TilesetScaleY;
-uniform sampler2D tex_frg_17;
+uniform sampler2D tex_frg_17 : hint_albedo;
 uniform sampler2D Ground : hint_albedo, filter_nearest;
 
 
@@ -314,7 +315,7 @@ void fragment() {
 
 }
 "
-graph_offset = Vector2(-805.42, -498.115)
+graph_offset = Vector2(-911.793, -505.701)
 engine_version = {
 "major": 4,
 "minor": 0
@@ -394,7 +395,7 @@ nodes/vertex/35/node = SubResource( "VisualShaderNodeFloatOp_yqrmd" )
 nodes/vertex/35/position = Vector2(-1220, -420)
 nodes/vertex/36/node = SubResource( "VisualShaderNodeVectorDecompose_mm0m3" )
 nodes/vertex/36/position = Vector2(-260, -240)
-nodes/vertex/connections = PackedInt32Array(6, 0, 5, 0, 4, 0, 0, 5, 2, 0, 8, 1, 8, 0, 6, 0, 5, 0, 17, 1, 17, 0, 18, 1, 18, 0, 4, 0, 19, 0, 20, 0, 5, 2, 19, 0, 20, 0, 4, 1, 12, 0, 23, 0, 23, 0, 22, 0, 23, 1, 22, 1, 23, 2, 22, 2, 22, 0, 8, 0, 25, 0, 24, 2, 24, 0, 28, 0, 30, 0, 24, 3, 31, 0, 24, 4, 32, 0, 24, 5, 29, 0, 0, 0, 28, 0, 29, 1, 27, 0, 34, 0, 27, 2, 35, 0, 34, 0, 24, 0, 35, 0, 24, 1, 8, 0, 27, 0, 26, 0, 36, 0, 36, 0, 29, 0, 36, 2, 29, 2, 36, 1, 28, 1, 4, 0, 0, 6, 14, 0, 19, 1, 13, 0, 17, 0, 15, 0, 18, 0, 16, 0, 20, 1)
+nodes/vertex/connections = PackedInt32Array(6, 0, 5, 0, 4, 0, 0, 5, 2, 0, 8, 1, 8, 0, 6, 0, 5, 0, 17, 1, 17, 0, 18, 1, 18, 0, 4, 0, 19, 0, 20, 0, 5, 2, 19, 0, 20, 0, 4, 1, 12, 0, 23, 0, 23, 0, 22, 0, 23, 1, 22, 1, 23, 2, 22, 2, 22, 0, 8, 0, 25, 0, 24, 2, 24, 0, 28, 0, 30, 0, 24, 3, 31, 0, 24, 4, 32, 0, 24, 5, 29, 0, 0, 0, 28, 0, 29, 1, 27, 0, 34, 0, 27, 2, 35, 0, 34, 0, 24, 0, 35, 0, 24, 1, 8, 0, 27, 0, 26, 0, 36, 0, 36, 0, 29, 0, 36, 2, 29, 2, 36, 1, 28, 1, 4, 0, 0, 6, 14, 0, 19, 1, 13, 0, 17, 0, 15, 0, 18, 0, 16, 0, 20, 1, 6, 0, 5, 0, 4, 0, 0, 5, 2, 0, 8, 1, 8, 0, 6, 0, 5, 0, 17, 1, 17, 0, 18, 1, 18, 0, 4, 0, 19, 0, 20, 0, 5, 2, 19, 0, 20, 0, 4, 1, 12, 0, 23, 0, 23, 0, 22, 0, 23, 1, 22, 1, 23, 2, 22, 2, 22, 0, 8, 0, 25, 0, 24, 2, 24, 0, 28, 0, 30, 0, 24, 3, 31, 0, 24, 4, 32, 0, 24, 5, 29, 0, 0, 0, 28, 0, 29, 1, 27, 0, 34, 0, 27, 2, 35, 0, 34, 0, 24, 0, 35, 0, 24, 1, 8, 0, 27, 0, 26, 0, 36, 0, 36, 0, 29, 0, 36, 2, 29, 2, 36, 1, 28, 1, 4, 0, 0, 6, 14, 0, 19, 1, 13, 0, 17, 0, 15, 0, 18, 0, 16, 0, 20, 1)
 nodes/fragment/9/node = SubResource( "VisualShaderNodeInput_gpatj" )
 nodes/fragment/9/position = Vector2(-920, 160)
 nodes/fragment/13/node = SubResource( "VisualShaderNodeMix_bma84" )
@@ -405,4 +406,4 @@ nodes/fragment/16/node = SubResource( "VisualShaderNodeInput_wo2tt" )
 nodes/fragment/16/position = Vector2(20, 340)
 nodes/fragment/17/node = SubResource( "VisualShaderNodeTexture_25cya" )
 nodes/fragment/17/position = Vector2(-580, -400)
-nodes/fragment/connections = PackedInt32Array(9, 0, 15, 0, 15, 0, 13, 1, 15, 1, 13, 2, 13, 0, 0, 0, 17, 0, 13, 0)
+nodes/fragment/connections = PackedInt32Array(9, 0, 15, 0, 15, 0, 13, 1, 15, 1, 13, 2, 13, 0, 0, 0, 17, 0, 13, 0, 9, 0, 15, 0, 15, 0, 13, 1, 15, 1, 13, 2, 13, 0, 0, 0, 17, 0, 13, 0)

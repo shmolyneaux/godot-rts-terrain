@@ -10,11 +10,17 @@ config_version=5
 
 _global_script_classes=[{
 "base": "Node3D",
+"class": &"NavigationNode3D",
+"language": &"GDScript",
+"path": "res://addons/rts_terrain/NavigationNode3D.gd"
+}, {
+"base": "Node3D",
 "class": &"RtsTerrain",
 "language": &"GDScript",
 "path": "res://addons/rts_terrain/RtsTerrain.gd"
 }]
 _global_script_class_icons={
+"NavigationNode3D": "",
 "RtsTerrain": ""
 }
 
@@ -25,6 +31,10 @@ run/main_scene="res://Scenes/main.tscn"
 boot_splash/show_image=false
 config/icon="res://icon.png"
 config/features=PackedStringArray("4.0", "Vulkan Clustered")
+
+[autoload]
+
+NodeNavigationServer3D="*res://addons/rts_terrain/NodeNavigationServer3D.gd"
 
 [display]
 

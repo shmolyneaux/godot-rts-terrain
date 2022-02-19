@@ -517,6 +517,9 @@ func generate_mesh(terrain_data):
 	var view_st = SurfaceTool.new()
 	var navmesh_st = SurfaceTool.new()
 	var physics_st = SurfaceTool.new()
+	
+	var navigation_nodes = {}
+	var navigation_connections = []
 
 	view_st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	navmesh_st.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -534,7 +537,73 @@ func generate_mesh(terrain_data):
 			var ground_sts = [physics_st, view_st]
 			var model = tile_data & MODEL_MASK
 			var rotation = tile_data & ROTATION_MASK
-			if model not in [NO_MODEL, RAMP_UPPER, RAMP_LOWER]:
+			
+			var navigation_node = NavigationNode3D.new()
+			navigation_node.position = Vector3(x, cliff_level + (bl+tr)/2.0, y)
+			navigation_nodes[Vector3i(x, y, 0)] = navigation_node
+			if terrain_data.is_navigable(x, y):
+				navigation_node.disabled = false
+			else:
+				navigation_node.disabled = true
+			if x > 0:
+				navigation_connections.append(
+					[
+						navigation_node,
+						navigation_nodes[Vector3i(x-1, y, 0)]
+					]
+				)
+			if y > 0:
+				navigation_connections.append(
+					[
+						navigation_node,
+						navigation_nodes[Vector3i(x, y-1, 0)]
+					]
+				)
+			if x > 0 and y > 0:
+				var diagonal_navigation_node = NavigationNode3D.new()
+				diagonal_navigation_node.position = Vector3(x-0.5, cliff_level + tl, y-0.5)
+				diagonal_navigation_node.disabled = true
+				if (
+					terrain_data.is_navigable(x, y)
+					and terrain_data.is_navigable(x-1, y)
+					and terrain_data.is_navigable(x-1, y-1)
+					and terrain_data.is_navigable(x, y-1)
+				):
+					diagonal_navigation_node.disabled = false
+				navigation_nodes[Vector3i(x, y, 1)] = diagonal_navigation_node
+				navigation_connections.append(
+					[
+						diagonal_navigation_node,
+						navigation_nodes[Vector3i(x-1, y-1, 0)]
+					]
+				)
+				navigation_connections.append(
+					[
+						diagonal_navigation_node,
+						navigation_nodes[Vector3i(x, y, 0)]
+					]
+				)
+				navigation_connections.append(
+					[
+						diagonal_navigation_node,
+						navigation_nodes[Vector3i(x, y-1, 0)]
+					]
+				)
+				navigation_connections.append(
+					[
+						diagonal_navigation_node,
+						navigation_nodes[Vector3i(x-1, y, 0)]
+					]
+				)
+			if model == RAMP_UPPER:
+				navigation_node.position.y += 0.75
+			if model == RAMP_LOWER:
+				navigation_node.position.y += 0.25
+				
+			if model in [NO_MODEL, RAMP_UPPER, RAMP_LOWER]:
+				if terrain_data.is_navigable(x, y):
+					ground_sts.append(navmesh_st)
+			else:
 				var mesh
 				var tile = Vector2(1, 1)
 				if model == CLIFF_CORNER_OUTER:
@@ -700,58 +769,7 @@ func generate_mesh(terrain_data):
 					Vector3(x-0.5, bl+cliff_level, y+0.5)
 				]
 			)
-			
-			# Navmesh contracts away from obstacles so that reasonbly-sized
-			# units don't get stuck at corners.
-			if terrain_data.is_navigable(x, y):
-				var verts = [
-					Vector3(x-0.5, tl+cliff_level, y-0.5),
-					Vector3(x+0.5, tr+cliff_level, y-0.5),
-					Vector3(x+0.5, br+cliff_level, y+0.5),
-					Vector3(x-0.5, bl+cliff_level, y+0.5)
-				]
-				
-				var includes = [Vector2i(1, 1)]
-				# West
-				if terrain_data.is_navigable(x-1, y):
-					includes.append(Vector2i(0, 1))
-				# East
-				if terrain_data.is_navigable(x+1, y):
-					includes.append(Vector2i(2, 1))
-				# North
-				if terrain_data.is_navigable(x, y-1):
-					includes.append(Vector2i(1, 0))
-				# South
-				if terrain_data.is_navigable(x, y+1):
-					includes.append(Vector2i(1, 2))
-				# South-West
-				if terrain_data.is_navigable(x-1, y+1) and terrain_data.is_navigable(x, y+1) and terrain_data.is_navigable(x-1, y):
-					includes.append(Vector2i(0, 2))
-				# North-East
-				if terrain_data.is_navigable(x, y-1) and terrain_data.is_navigable(x+1, y) and terrain_data.is_navigable(x+1, y-1):
-					includes.append(Vector2i(2, 0))
-				# North-West
-				if terrain_data.is_navigable(x, y-1) and terrain_data.is_navigable(x-1, y) and terrain_data.is_navigable(x-1, y-1):
-					includes.append(Vector2i(0, 0))
-				# South-East
-				if terrain_data.is_navigable(x, y+1) and terrain_data.is_navigable(x+1, y) and terrain_data.is_navigable(x+1, y+1):
-					includes.append(Vector2i(2, 2))
-				
-				var poles = [0.0, 0.2, 0.8, 1.0]
-				for u in range(3):
-					for v in range(3):
-						if Vector2i(u, v) in includes:
-							_create_quad_face(
-								[navmesh_st],
-								[
-									interp_quad(poles[u], poles[v], verts),
-									interp_quad(poles[u+1], poles[v], verts),
-									interp_quad(poles[u+1], poles[v+1], verts),
-									interp_quad(poles[u], poles[v+1], verts),
-								]
-							)
-
-			
+	
 	var mesh_node = MeshInstance3D.new()
 	view_st.set_material(material)
 	mesh_node.mesh = view_st.commit()
@@ -764,6 +782,8 @@ func generate_mesh(terrain_data):
 		"mesh_instances": mesh_instances,
 		"navmesh": navmesh_st.commit(),
 		"physics": physics_st.commit(),
+		"navigation_nodes": navigation_nodes.values(),
+		"navigation_connections": navigation_connections,
 	}
 
 static func _navmesh_from_mesh(mesh):
@@ -824,6 +844,13 @@ func _regenerate_mesh():
 			for mesh_node in ret["mesh_instances"]:
 				add_child(mesh_node)
 				managed_children.append(mesh_node)
+	
+		for node in ret["navigation_nodes"]:
+			add_child(node)
+			managed_children.append(node)
+			
+		for connection in ret["navigation_connections"]:
+			connection[0].connect_to(connection[1])
 	
 		# Always generate a physics body in the editor so we can use it for
 		# raycasts when editing the terrain.

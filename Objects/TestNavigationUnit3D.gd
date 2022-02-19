@@ -1,41 +1,37 @@
-extends CharacterBody3D
+extends Node3D
 
 var target_location = null
-var speed = 0.03
+var speed = 5.0
+var path
+var distance_along_path = 0.0
 
 @onready var target_debug_ball = $Target
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
+	# TODO: start with astar.get_closest_position_in_segment 
+	var closest_point = NodeNavigationServer3D.astar.get_closest_point(global_transform.origin)
 	target_location = get_parent().get_node("Walk Target").global_transform.origin
-	$NavigationAgent3D.set_target_location(target_location)
+	var target_point = NodeNavigationServer3D.astar.get_closest_point(target_location)
+	path = NodeNavigationServer3D.astar.get_point_path(closest_point, target_point)
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
-func _physics_process(delta):
-	var potential_new_target = get_parent().get_node("Walk Target").global_transform.origin
-	if target_location != potential_new_target:
-		print("changing target")
-		target_location = potential_new_target
-		$NavigationAgent3D.set_target_location(target_location)
-
-	print($NavigationAgent3D.is_target_reachable())
-
-	if not $NavigationAgent3D.is_target_reached():
-		var move_target = $NavigationAgent3D.get_next_location()
-		target_debug_ball.global_transform.origin = move_target
-		motion_velocity = (move_target - position).normalized()
-		
-		# TODO: Needs some PID on the movement vector to prevent erratic movement
-		motion_velocity = motion_velocity*speed
-
-		# Don't bounce around the target location, snap to it exactly if it's close
-		#print(move_target, " =?= " , target_location, " =?= ", position)
-		if (move_target - position).length() < (motion_velocity*delta).length():
-			position = move_target
+func _process(delta):
+	distance_along_path += speed*delta
+	
+	# Now figure out where that distance is on the path
+	var d = 0.0
+	var pos = path[0]
+	for point in path:
+		var segment = point - pos
+		var segment_length = segment.length()
+		if d + segment_length < distance_along_path:
+			d += segment_length
 		else:
-			position = position + motion_velocity
-			
-		move_and_slide()
-
+			pos = pos + segment.normalized() * (distance_along_path - d)
+			break
+		pos = point
+		
+	position = pos
 	if target_location.distance_to(global_transform.origin) < 1.0:
 		queue_free()
