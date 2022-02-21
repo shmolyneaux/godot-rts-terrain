@@ -1,0 +1,214 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3 uid="uid://csm3o5aalj2mm"]
+
+[sub_resource type="Shader" id="Shader_5nhtl"]
+code = "// NOTE: Shader automatically converted from Godot Engine 4.0.alpha1's StandardMaterial3D.
+
+shader_type spatial;
+render_mode blend_mix,depth_draw_opaque,cull_back,diffuse_burley,specular_schlick_ggx;
+uniform vec4 albedo : hint_color;
+uniform sampler2D texture_albedo : hint_albedo,filter_linear_mipmap,repeat_enable;
+uniform float point_size : hint_range(0,128);
+uniform float roughness : hint_range(0,1);
+uniform sampler2D texture_metallic : hint_white,filter_linear_mipmap,repeat_enable;
+uniform vec4 metallic_texture_channel;
+uniform sampler2D texture_roughness : hint_roughness_r,filter_linear_mipmap,repeat_enable;
+uniform float specular;
+uniform float metallic;
+uniform vec3 uv1_scale;
+uniform vec3 uv1_offset;
+uniform vec3 uv2_scale;
+uniform vec3 uv2_offset;
+
+instance uniform float top_left;
+instance uniform float top_right;
+instance uniform float bottom_left;
+instance uniform float bottom_right;
+instance uniform float TilesetScaleX;
+instance uniform float toff_x;
+instance uniform float toff_y;
+instance uniform float TilesetScaleY;
+uniform sampler2D tex_frg_17 : hint_albedo;
+uniform sampler2D Ground : hint_black_albedo, filter_nearest;
+
+
+
+void vertex() {
+// Input:26
+	vec3 n_out26p0 = VERTEX;
+
+
+// VectorDecompose:36
+	float n_out36p0 = n_out26p0.x;
+	float n_out36p1 = n_out26p0.y;
+	float n_out36p2 = n_out26p0.z;
+
+
+// Input:12
+	mat4 n_out12p0 = WORLD_MATRIX;
+
+
+// TransformDecompose:23
+	vec3 n_out23p0 = n_out12p0[0].xyz;
+	vec3 n_out23p1 = n_out12p0[1].xyz;
+	vec3 n_out23p2 = n_out12p0[2].xyz;
+	vec3 n_out23p3 = n_out12p0[3].xyz;
+
+
+// TransformCompose:22
+	vec3 n_in22p3 = vec3(0.00000, 0.00000, 0.00000);
+	mat4 n_out22p0 = mat4(vec4(n_out23p0, 0.0), vec4(n_out23p1, 0.0), vec4(n_out23p2, 0.0), vec4(n_in22p3, 1.0));
+
+
+// Input:2
+	vec3 n_out2p0 = VERTEX;
+
+
+// TransformVectorMult:8
+	vec3 n_out8p0 = (n_out22p0 * vec4(n_out2p0, 1.0)).xyz;
+
+
+// VectorDecompose:27
+	float n_out27p0 = n_out8p0.x;
+	float n_out27p1 = n_out8p0.y;
+	float n_out27p2 = n_out8p0.z;
+
+
+// FloatOp:34
+	float n_in34p1 = 0.50000;
+	float n_out34p0 = n_out27p0 + n_in34p1;
+
+
+// FloatOp:35
+	float n_in35p1 = 0.50000;
+	float n_out35p0 = n_out27p2 + n_in35p1;
+
+
+// FloatUniform:25
+	float n_out25p0 = top_left;
+
+
+// FloatUniform:30
+	float n_out30p0 = top_right;
+
+
+// FloatUniform:31
+	float n_out31p0 = bottom_left;
+
+
+// FloatUniform:32
+	float n_out32p0 = bottom_right;
+
+
+	float n_out24p0;
+// Expression:24
+	n_out24p0 = 0.0;
+	{
+		if ((n_out34p0+n_out35p0) < 1.0) {
+			float bary_a_area = 1.0 - n_out34p0 - n_out35p0;
+			float bary_b_area = n_out34p0;
+			float bary_c_area = n_out35p0;
+			n_out24p0 = bary_a_area*n_out25p0 + bary_b_area*n_out30p0 + bary_c_area*n_out31p0;
+		} else {
+			float bary_d_area = n_out34p0 + n_out35p0 - 1.0;
+			float bary_b_area = 1.0 - n_out35p0;
+			float bary_c_area = 1.0 - n_out34p0;
+			n_out24p0 = bary_d_area*n_out32p0 + bary_b_area*n_out30p0 + bary_c_area*n_out31p0;
+		}
+		
+		
+	}
+
+
+// FloatOp:28
+	float n_out28p0 = n_out24p0 + n_out36p1;
+
+
+// VectorCompose:29
+	vec3 n_out29p0 = vec3(n_out36p0, n_out28p0, n_out36p2);
+
+
+// FloatUniform:15
+	float n_out15p0 = TilesetScaleX;
+
+
+// FloatUniform:13
+	float n_out13p0 = toff_x;
+
+
+// VectorOp:6
+	vec3 n_in6p1 = vec3(0.50000, 0.00000, 0.50000);
+	vec3 n_out6p0 = n_out8p0 + n_in6p1;
+
+
+// VectorDecompose:5
+	float n_out5p0 = n_out6p0.x;
+	float n_out5p1 = n_out6p0.y;
+	float n_out5p2 = n_out6p0.z;
+
+
+// FloatOp:17
+	float n_out17p0 = n_out13p0 + n_out5p0;
+
+
+// FloatOp:18
+	float n_out18p0 = n_out15p0 * n_out17p0;
+
+
+// FloatUniform:14
+	float n_out14p0 = toff_y;
+
+
+// FloatOp:19
+	float n_out19p0 = n_out5p2 + n_out14p0;
+
+
+// FloatUniform:16
+	float n_out16p0 = TilesetScaleY;
+
+
+// FloatOp:20
+	float n_out20p0 = n_out19p0 * n_out16p0;
+
+
+// VectorCompose:4
+	float n_in4p2 = 0.00000;
+	vec3 n_out4p0 = vec3(n_out18p0, n_out20p0, n_in4p2);
+
+
+// Output:0
+	VERTEX = n_out29p0;
+	UV2 = n_out4p0.xy;
+	COLOR.rgb = n_out4p0;
+
+
+}
+
+
+
+
+void fragment() {
+	vec2 base_uv = UV;
+	vec4 albedo_tex = texture(texture_albedo,base_uv);
+	ALBEDO = albedo.rgb * albedo_tex.rgb;
+	float metallic_tex = dot(texture(texture_metallic,base_uv),metallic_texture_channel);
+	METALLIC = metallic_tex * metallic;
+	vec4 roughness_texture_channel = vec4(1.0,0.0,0.0,0.0);
+	float roughness_tex = dot(texture(texture_roughness,base_uv),roughness_texture_channel);
+	ROUGHNESS = roughness_tex * roughness;
+	SPECULAR = specular;
+}
+"
+
+[resource]
+render_priority = 0
+shader = SubResource( "Shader_5nhtl" )
+shader_param/albedo = Color(0.403922, 0.388235, 0.592157, 1)
+shader_param/point_size = 1.0
+shader_param/roughness = 1.0
+shader_param/metallic_texture_channel = Plane(1, 0, 0, 0)
+shader_param/specular = 0.5
+shader_param/metallic = 0.0
+shader_param/uv1_scale = Vector3(1, 1, 1)
+shader_param/uv1_offset = Vector3(0, 0, 0)
+shader_param/uv2_scale = Vector3(1, 1, 1)
+shader_param/uv2_offset = Vector3(0, 0, 0)

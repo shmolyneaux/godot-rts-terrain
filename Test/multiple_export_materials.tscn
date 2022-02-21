@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://cei5uwen6tbpq"]
+
+[ext_resource type="Script" path="res://Test/multiple_export_materials.gd" id="1_w5g24"]
+
+[node name="MultipleExportMaterials" type="Node"]
+script = ExtResource( "1_w5g24" )

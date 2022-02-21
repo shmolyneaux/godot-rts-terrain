@@ -1,5 +1,11 @@
 extends Node
 
+# TODO: factor out the debug view into its own script
+# TODO: batch navigation update messages
+
+signal navigation_updated()
+var _need_to_report_update = false
+
 var astar = AStar.new()
 var _debug_mesh: ImmediateMesh = ImmediateMesh.new()
 
@@ -22,6 +28,15 @@ var debug_draw: bool = false:
 			_debug_mesh.clear_surfaces()
 			_id_to_debug_icon = {}
 
+
+func _process(delta):
+	# Batch any updates per frame so that we don't spam the signal for every
+	# update within a frame.
+	if _need_to_report_update:
+		navigation_updated.emit()
+		_need_to_report_update = false
+
+
 func add_node(node: NavigationNode3D):
 	var id = astar.get_available_point_id()
 	_node_id_to_navigation_id[node.get_instance_id()] = id
@@ -32,19 +47,23 @@ func add_node(node: NavigationNode3D):
 	var material = StandardMaterial3D.new()
 	var mesh_instance = MeshInstance3D.new()
 	mesh_instance.mesh = _debug_mesh
+	mesh_instance.cast_shadow = false
 	add_child(mesh_instance)
 
+	_need_to_report_update = true
 	_redraw_debug()
-	
-	
+
+
 func node_moved(node: NavigationNode3D, new_position: Vector3):
 	var id = _node_id_to_navigation_id[node.get_instance_id()]
 	astar.set_point_position(id, new_position)
 	if id in _id_to_debug_icon:
 		_id_to_debug_icon[id].position = new_position
+		
+	_need_to_report_update = true
 	_redraw_debug_lines()
-	
-	
+
+
 func node_enabled(node: NavigationNode3D, enabled: bool):
 	var id = _node_id_to_navigation_id[node.get_instance_id()]
 	astar.set_point_disabled(id, not enabled)
@@ -53,6 +72,8 @@ func node_enabled(node: NavigationNode3D, enabled: bool):
 			_id_to_debug_icon[id].modulate = Color.WHITE
 		else:
 			_id_to_debug_icon[id].modulate = Color.DIM_GRAY
+	
+	_need_to_report_update = true
 
 
 func remove_node(node: NavigationNode3D):
@@ -62,13 +83,19 @@ func remove_node(node: NavigationNode3D):
 	if id in _id_to_debug_icon:
 		_id_to_debug_icon[id].modulate = Color.BLACK
 		_id_to_debug_icon.erase(id)
+	
+	_need_to_report_update = true
+
 
 func connect_nodes(a: NavigationNode3D, b: NavigationNode3D):
 	astar.connect_points(
 		_node_id_to_navigation_id[a.get_instance_id()],
 		_node_id_to_navigation_id[b.get_instance_id()]
 	)
+	
+	_need_to_report_update = true
 	_redraw_debug()
+
 
 func _redraw_debug_lines():
 	if debug_draw:
@@ -116,6 +143,7 @@ func _redraw_debug_icons():
 				icon.modulate = Color.DIM_GRAY
 			_debug_icons.append(icon)
 			_id_to_debug_icon[id] = icon
+
 
 func _redraw_debug():
 	_redraw_debug_icons()

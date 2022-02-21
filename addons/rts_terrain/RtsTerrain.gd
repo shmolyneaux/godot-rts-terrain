@@ -29,7 +29,7 @@ enum {
 const CLIFF_LEVEL_MASK = 0b00000000_00000000_00000000_11111111
 
 @export var material: Material = null
-@export var cliff_material: Material = null
+@export var cliff_material: Array[Material] = []
 @export var outer_corner: Mesh = null
 @export var inner_corner: Mesh = null
 @export var side: Mesh = null
@@ -87,16 +87,6 @@ var terrain = TerrainData.new()
 			terrain.data = v
 			_regenerate_mesh()
 			
-@export var terrain_holes: PackedInt32Array:
-	get:
-		return terrain.holes
-	set(v):
-		if v.size() != width * height:
-			print("new terrain of size ", v.size(), " doesn't match size: ", width*height)
-		else:
-			terrain.holes = v
-			_regenerate_mesh()
-			
 			
 @export var terrain_height: PackedFloat32Array:
 	get:
@@ -110,6 +100,8 @@ var terrain = TerrainData.new()
 
 
 var placeholder_mesh = BoxMesh.new()
+
+var _navigation_nodes = {}
 
 signal input_event(camera: Node, event: InputEvent, position: Vector3, normal: Vector3)
 
@@ -160,7 +152,29 @@ func is_hole(x: int, y: int) -> bool:
 	
 func set_hole(x: int, y: int, value: int):
 	terrain.set_hole(x, y, value)
-	_regenerate_mesh()
+	_navigation_nodes[Vector3i(x, y, 0)].disabled = value
+	
+	# Recompute diagonals
+	var diagonals = [
+		[x, y],
+		[x+1, y],
+		[x+1, y+1],
+		[x, y+1],
+	]
+	for diag in diagonals:
+		var idx = Vector3i(diag[0], diag[1], 1)
+		if idx in _navigation_nodes:
+			if (
+				terrain.is_navigable(diag[0], diag[1])
+				and terrain.is_navigable(diag[0]-1, diag[1])
+				and terrain.is_navigable(diag[0]-1, diag[1]-1)
+				and terrain.is_navigable(diag[0], diag[1]-1)
+			):
+				_navigation_nodes[idx].disabled = false
+			else:
+				_navigation_nodes[idx].disabled = true
+		
+	NodeNavigationServer3D._redraw_debug_lines()
 	
 func get_cliff(x: int, y: int) -> int:
 	return terrain.get_cliff_level(x, y)
@@ -517,9 +531,6 @@ func generate_mesh(terrain_data):
 	var view_st = SurfaceTool.new()
 	var navmesh_st = SurfaceTool.new()
 	var physics_st = SurfaceTool.new()
-	
-	var navigation_nodes = {}
-	var navigation_connections = []
 
 	view_st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	navmesh_st.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -537,68 +548,6 @@ func generate_mesh(terrain_data):
 			var ground_sts = [physics_st, view_st]
 			var model = tile_data & MODEL_MASK
 			var rotation = tile_data & ROTATION_MASK
-			
-			var navigation_node = NavigationNode3D.new()
-			navigation_node.position = Vector3(x, cliff_level + (bl+tr)/2.0, y)
-			navigation_nodes[Vector3i(x, y, 0)] = navigation_node
-			if terrain_data.is_navigable(x, y):
-				navigation_node.disabled = false
-			else:
-				navigation_node.disabled = true
-			if x > 0:
-				navigation_connections.append(
-					[
-						navigation_node,
-						navigation_nodes[Vector3i(x-1, y, 0)]
-					]
-				)
-			if y > 0:
-				navigation_connections.append(
-					[
-						navigation_node,
-						navigation_nodes[Vector3i(x, y-1, 0)]
-					]
-				)
-			if x > 0 and y > 0:
-				var diagonal_navigation_node = NavigationNode3D.new()
-				diagonal_navigation_node.position = Vector3(x-0.5, cliff_level + tl, y-0.5)
-				diagonal_navigation_node.disabled = true
-				if (
-					terrain_data.is_navigable(x, y)
-					and terrain_data.is_navigable(x-1, y)
-					and terrain_data.is_navigable(x-1, y-1)
-					and terrain_data.is_navigable(x, y-1)
-				):
-					diagonal_navigation_node.disabled = false
-				navigation_nodes[Vector3i(x, y, 1)] = diagonal_navigation_node
-				navigation_connections.append(
-					[
-						diagonal_navigation_node,
-						navigation_nodes[Vector3i(x-1, y-1, 0)]
-					]
-				)
-				navigation_connections.append(
-					[
-						diagonal_navigation_node,
-						navigation_nodes[Vector3i(x, y, 0)]
-					]
-				)
-				navigation_connections.append(
-					[
-						diagonal_navigation_node,
-						navigation_nodes[Vector3i(x, y-1, 0)]
-					]
-				)
-				navigation_connections.append(
-					[
-						diagonal_navigation_node,
-						navigation_nodes[Vector3i(x-1, y, 0)]
-					]
-				)
-			if model == RAMP_UPPER:
-				navigation_node.position.y += 0.75
-			if model == RAMP_LOWER:
-				navigation_node.position.y += 0.25
 				
 			if model in [NO_MODEL, RAMP_UPPER, RAMP_LOWER]:
 				if terrain_data.is_navigable(x, y):
@@ -682,7 +631,9 @@ func generate_mesh(terrain_data):
 				# This is where we'd figure out what model to show
 				var mesh_node = MeshInstance3D.new()
 				mesh_node.mesh = mesh
-				mesh_node.set_surface_override_material(0, cliff_material)
+				for idx in mesh_node.get_surface_override_material_count():
+					if idx < cliff_material.size():
+						mesh_node.set_surface_override_material(idx, cliff_material[idx])
 				mesh_node.set_shader_instance_uniform("TilesetScaleX", 0.2)
 				mesh_node.set_shader_instance_uniform("TilesetScaleY", 1.0/3.0)
 				mesh_node.set_shader_instance_uniform("toff_x", tile.x)
@@ -782,8 +733,6 @@ func generate_mesh(terrain_data):
 		"mesh_instances": mesh_instances,
 		"navmesh": navmesh_st.commit(),
 		"physics": physics_st.commit(),
-		"navigation_nodes": navigation_nodes.values(),
-		"navigation_connections": navigation_connections,
 	}
 
 static func _navmesh_from_mesh(mesh):
@@ -830,6 +779,105 @@ func _emit_physics_collider_input_events(
 		normal
 	)
 
+func _generate_pathfinding_nodes(terrain_data):
+	var navigation_nodes = {}
+	var navigation_connections = []
+
+	for x in range(terrain_data.width):
+		for y in range(terrain_data.height):
+			var tile_data = terrain_data.get_data(x, y)
+			var tl = terrain_data.get_terrain_height(x, y)
+			var tr = terrain_data.get_terrain_height(x+1, y)
+			var bl = terrain_data.get_terrain_height(x, y+1)
+			var br = terrain_data.get_terrain_height(x+1, y+1)
+			var cliff_level = tile_data & 0b111
+			
+			var navigation_node = NavigationNode3D.new()
+			navigation_nodes[Vector3i(x, y, 0)] = navigation_node
+			
+			if terrain_data.is_navigable(x, y):
+				navigation_node.disabled = false
+			else:
+				navigation_node.disabled = true
+				
+			if x > 0:
+				navigation_connections.append(
+					[
+						navigation_node,
+						navigation_nodes[Vector3i(x-1, y, 0)]
+					]
+				)
+			if y > 0:
+				navigation_connections.append(
+					[
+						navigation_node,
+						navigation_nodes[Vector3i(x, y-1, 0)]
+					]
+				)
+			if x > 0 and y > 0:
+				var diagonal_navigation_node = NavigationNode3D.new()
+				navigation_nodes[Vector3i(x, y, 1)] = diagonal_navigation_node
+				diagonal_navigation_node.position = Vector3(x-0.5, cliff_level + tl, y-0.5)
+				diagonal_navigation_node.disabled = true
+				if (
+					terrain_data.is_navigable(x, y)
+					and terrain_data.is_navigable(x-1, y)
+					and terrain_data.is_navigable(x-1, y-1)
+					and terrain_data.is_navigable(x, y-1)
+				):
+					diagonal_navigation_node.disabled = false
+				navigation_connections.append(
+					[
+						diagonal_navigation_node,
+						navigation_nodes[Vector3i(x-1, y-1, 0)]
+					]
+				)
+				navigation_connections.append(
+					[
+						diagonal_navigation_node,
+						navigation_nodes[Vector3i(x, y, 0)]
+					]
+				)
+				navigation_connections.append(
+					[
+						diagonal_navigation_node,
+						navigation_nodes[Vector3i(x, y-1, 0)]
+					]
+				)
+				navigation_connections.append(
+					[
+						diagonal_navigation_node,
+						navigation_nodes[Vector3i(x-1, y, 0)]
+					]
+				)
+				
+			navigation_node.position = Vector3(x, cliff_level + (bl+tr)/2.0, y)
+			var model = tile_data & MODEL_MASK
+			if model == RAMP_UPPER:
+				navigation_node.position.y += 0.75
+			if model == RAMP_LOWER:
+				navigation_node.position.y += 0.25
+
+	return {
+		"navigation_nodes": navigation_nodes,
+		"navigation_connections": navigation_connections,
+	}
+	
+	
+func _regenerate_navigation():
+	for child in _navigation_nodes.values():
+		remove_child(child)
+		child.queue_free()
+		
+	var pathfinding = _generate_pathfinding_nodes(terrain)
+	_navigation_nodes = pathfinding["navigation_nodes"]
+	for node in _navigation_nodes.values():
+		add_child(node)
+		
+	for connection in pathfinding["navigation_connections"]:
+		connection[0].connect_to(connection[1])
+
+
 func _regenerate_mesh():
 	for child in managed_children:
 		remove_child(child)
@@ -845,12 +893,7 @@ func _regenerate_mesh():
 				add_child(mesh_node)
 				managed_children.append(mesh_node)
 	
-		for node in ret["navigation_nodes"]:
-			add_child(node)
-			managed_children.append(node)
-			
-		for connection in ret["navigation_connections"]:
-			connection[0].connect_to(connection[1])
+		_regenerate_navigation()
 	
 		# Always generate a physics body in the editor so we can use it for
 		# raycasts when editing the terrain.

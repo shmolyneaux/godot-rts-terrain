@@ -1,4 +1,4 @@
-[gd_scene load_steps=31 format=3 uid="uid://dgb7u13ogxwhe"]
+[gd_scene load_steps=35 format=3 uid="uid://dgb7u13ogxwhe"]
 
 [ext_resource type="PackedScene" path="res://Objects/GameCamera.tscn" id="1_8r48a"]
 [ext_resource type="Script" path="res://Test/DebugDrawNavigation.gd" id="1_ojxt8"]
@@ -6,18 +6,19 @@
 [ext_resource type="Texture2D" uid="uid://bdgj0mv5t50gr" path="res://Assets/Textures/selection_circle_8px.png" id="3_1r4l6"]
 [ext_resource type="Script" path="res://Objects/SelectionCircle.gd" id="4_c4b8r"]
 [ext_resource type="Script" path="res://Test/Spawner.gd" id="5_2tuc3"]
-[ext_resource type="ArrayMesh" uid="uid://1dwbovgwvtv1" path="res://Assets/Models/simple_cliff_outer.res" id="6_mmt4s"]
-[ext_resource type="Material" uid="uid://cu1fbgyeu3ybv" path="res://Assets/Textures/uv_debug_material.tres" id="6_reguv"]
-[ext_resource type="Texture2D" uid="uid://c10m4uwlay2tt" path="res://Assets/Textures/grass.png" id="6_w4tx5"]
+[ext_resource type="Material" uid="uid://csm3o5aalj2mm" path="res://Assets/Textures/stone_dark_material.tres" id="6_7u1s4"]
 [ext_resource type="Script" path="res://Test/PlayerController.gd" id="7_2outt"]
 [ext_resource type="PackedScene" uid="uid://iq0vwdwd0ik4" path="res://addons/rts_terrain/Brush.tscn" id="7_33ew6"]
-[ext_resource type="ArrayMesh" uid="uid://cabj6krllfb57" path="res://Assets/Models/simple_cliff_inner.res" id="7_hsf53"]
-[ext_resource type="ArrayMesh" uid="uid://cnd5k7l35eqtw" path="res://Assets/Models/simple_cliff_side1.res" id="8_hq4c1"]
-[ext_resource type="ArrayMesh" uid="uid://50b1ex1gwir7" path="res://Assets/Models/simple_ramp_upper_left.res" id="9_o8tdy"]
-[ext_resource type="ArrayMesh" uid="uid://dhc2yui4ttpmc" path="res://Assets/Models/simple_ramp_upper_right.res" id="10_axwwt"]
-[ext_resource type="ArrayMesh" uid="uid://72w2jaj5pr5y" path="res://Assets/Models/simple_ramp_lower_left.res" id="11_icv1f"]
-[ext_resource type="ArrayMesh" uid="uid://ca7dvworjpm5c" path="res://Assets/Models/simple_ramp_lower_right.res" id="12_gupwy"]
+[ext_resource type="ArrayMesh" uid="uid://b7c8g6o2asekj" path="res://Assets/Models/dungeon_walls/dungeon_ramp_outer.res" id="7_halp4"]
+[ext_resource type="Material" uid="uid://v1dn2hofip1s" path="res://Assets/Textures/stone_light_material.tres" id="7_ysu75"]
+[ext_resource type="ArrayMesh" uid="uid://b3b4sg2vthumb" path="res://Assets/Models/dungeon_walls/dungeon_ramp_inner.res" id="8_gjl83"]
+[ext_resource type="ArrayMesh" uid="uid://c1ego312ayxcl" path="res://Assets/Models/dungeon_walls/dungeon_ramp_side.res" id="9_p5lmp"]
+[ext_resource type="ArrayMesh" uid="uid://cbyhopc6dfvyd" path="res://Assets/Models/dungeon_walls/dungeon_ramp_upper_left.res" id="10_x4foh"]
+[ext_resource type="ArrayMesh" uid="uid://bsh6w5fp013jm" path="res://Assets/Models/dungeon_walls/dungeon_ramp_upper_right.res" id="11_qq12b"]
+[ext_resource type="ArrayMesh" uid="uid://dwks5hi23gdr3" path="res://Assets/Models/dungeon_walls/dungeon_ramp_lower_left.res" id="12_de73y"]
+[ext_resource type="ArrayMesh" uid="uid://cps343r6rjkkt" path="res://Assets/Models/dungeon_walls/dungeon_ramp_lower_right.res" id="13_85u82"]
 [ext_resource type="Shader" uid="uid://wdhdxn6vgr7b" path="res://Assets/Textures/square_fog.tres" id="17_tejct"]
+[ext_resource type="Script" path="res://Test/damage_on_enter_area.gd" id="19_14lop"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_rf48w"]
 sky_top_color = Color(0.568627, 0.698039, 0.807843, 1)
@@ -43,7 +44,7 @@ radius = 0.1
 height = 0.2
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_q0c2w"]
-albedo_texture = ExtResource( "6_w4tx5" )
+albedo_color = Color(0.403922, 0.388235, 0.592157, 1)
 texture_filter = 0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2inng"]
@@ -55,7 +56,7 @@ radius = 0.1
 height = 0.2
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_jkufq"]
-albedo_texture = ExtResource( "6_w4tx5" )
+albedo_color = Color(0.403922, 0.388235, 0.592157, 1)
 uv1_scale = Vector3(500, 500, 1)
 texture_filter = 0
 
@@ -74,6 +75,77 @@ shader_param/min_z = null
 [sub_resource type="QuadMesh" id="QuadMesh_4b8hm"]
 material = SubResource( "ShaderMaterial_rj002" )
 size = Vector2(200, 200)
+
+[sub_resource type="Animation" id="Animation_p3vre"]
+resource_name = "hurt_in_area"
+length = 2.0
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Decal:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.3, 1, 2),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 1,
+"values": [Color(1, 0.854902, 0, 1), Color(1, 0, 0, 1), Color(1, 0.854902, 0, 1), Color(1, 0.854902, 0, 1)]
+}
+tracks/1/type = "method"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath(".")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0.3, 1),
+"transitions": PackedFloat32Array(1, 1),
+"values": [{
+"args": [],
+"method": &"start_damage"
+}, {
+"args": [],
+"method": &"stop_damage"
+}]
+}
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_lns10"]
+height = 4.15414
+
+[sub_resource type="Animation" id="Animation_157wb"]
+resource_name = "hurt_in_area"
+length = 2.0
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Decal:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.3, 1, 2),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 1,
+"values": [Color(1, 0.854902, 0, 1), Color(1, 0, 0, 1), Color(1, 0.854902, 0, 1), Color(1, 0.854902, 0, 1)]
+}
+tracks/1/type = "method"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath(".")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0.3, 1),
+"transitions": PackedFloat32Array(1, 1),
+"values": [{
+"args": [],
+"method": &"start_damage"
+}, {
+"args": [],
+"method": &"stop_damage"
+}]
+}
 
 [node name="Main" type="Node3D"]
 
@@ -97,7 +169,7 @@ shadow_enabled = true
 directional_shadow_max_distance = 250.0
 
 [node name="Spawner" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.01878, 0.865115, 1.9168)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.43951, 0.865115, 1.9168)
 mesh = SubResource( "SphereMesh_vyjk5" )
 script = ExtResource( "5_2tuc3" )
 
@@ -108,19 +180,19 @@ autostart = true
 [node name="RtsTerrain" type="Node3D" parent="."]
 script = ExtResource( "1_vb6gr" )
 material = SubResource( "StandardMaterial3D_q0c2w" )
-cliff_material = ExtResource( "6_reguv" )
-outer_corner = ExtResource( "6_mmt4s" )
-inner_corner = ExtResource( "7_hsf53" )
-side = ExtResource( "8_hq4c1" )
-upper_left_ramp = ExtResource( "9_o8tdy" )
-upper_right_ramp = ExtResource( "10_axwwt" )
-lower_left_ramp = ExtResource( "11_icv1f" )
-lower_right_ramp = ExtResource( "12_gupwy" )
+cliff_material = [ExtResource( "6_7u1s4" ), ExtResource( "7_ysu75" )]
+outer_corner = ExtResource( "7_halp4" )
+inner_corner = ExtResource( "8_gjl83" )
+side = ExtResource( "9_p5lmp" )
+upper_left_ramp = ExtResource( "10_x4foh" )
+upper_right_ramp = ExtResource( "11_qq12b" )
+lower_left_ramp = ExtResource( "12_de73y" )
+lower_right_ramp = ExtResource( "13_85u82" )
+generate_navigation_region = false
 width = 21
 height = 19
 terrain_cliffs = PackedInt32Array(637534208, 1157627904, 1157627904, 1157627904, 1157627904, 1157627904, 1157627904, 1157627904, 1157627904, 1157627904, 1157627904, 1157627904, 1157627904, 1157627904, 1157627904, 1157627904, 1157627904, 1157627904, 1157627904, 1157627904, 1174405120, 620756992, 1728053248, 83886080, 83886080, 83886080, 83886080, 83886080, 83886080, 83886080, 83886080, 83886080, 83886080, 83886080, 83886080, 83886080, 83886080, 83886080, 83886080, 83886080, 117440512, 1694498816, 620756992, 1694498816, 1073741824, 1073741824, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 620756992, 1694498816, 620756992, 1694498816, 1073741824, 1073741824, 0, 0, 0, 0, 0, 0, 0, 0, 1107296256, 1207959552, 1090519040, 0, 0, 0, 0, 620756992, 1694498816, 620756992, 1694498816, 0, 0, 0, 0, 0, 0, 0, 0, 637534208, 1157627904, 1140850688, 1224736768, 1124073472, 1157627904, 1174405120, 0, 0, 620756992, 1694498816, 620756992, 1694498816, 0, 0, 0, 0, 0, 0, 0, 536870912, 620756992, 1610612737, 1, 536870913, 536870913, 1, 1694498816, 0, 0, 620756992, 1694498816, 620756992, 1694498816, 0, 0, 0, 0, 0, 0, 0, 553648128, 587202560, 1610612737, 536870913, 536870913, 536870913, 536870913, 1694498816, 0, 0, 620756992, 1694498816, 620756992, 1694498816, 0, 0, 0, 0, 0, 0, 0, 671088640, 687865856, 536870913, 536870913, 536870913, 536870913, 536870913, 1677721600, 1644167168, 0, 620756992, 1694498816, 620756992, 1694498816, 0, 0, 0, 0, 0, 0, 0, 570425344, 603979776, 1610612737, 536870913, 536870913, 536870913, 536870913, 1761607680, 1744830464, 0, 620756992, 1694498816, 620756992, 1191182336, 1157627904, 1157627904, 1157627904, 1157627904, 1157627904, 1157627904, 1157627904, 1157627904, 654311424, 1610612737, 536870913, 536870913, 1, 536870913, 1660944384, 1627389952, 0, 620756992, 1694498816, 620756992, 1728053248, 83886080, 83886080, 83886080, 83886080, 83886080, 83886080, 83886080, 83886080, 117440512, 1, 536870913, 1, 536870913, 536870913, 1694498816, 0, 0, 620756992, 1694498816, 620756992, 1694498816, 0, 0, 0, 0, 0, 0, 0, 0, 620756992, 1, 1, 1, 1, 1, 1694498816, 0, 0, 620756992, 1694498816, 620756992, 1694498816, 0, 1073741824, 1073741824, 1073741824, 0, 0, 0, 0, 100663296, 83886080, 50331648, 150994944, 67108864, 83886080, 1711276032, 0, 0, 620756992, 1694498816, 620756992, 1694498816, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16777216, 134217728, 33554432, 0, 0, 0, 0, 620756992, 1694498816, 620756992, 1191182336, 1157627904, 1157627904, 1157627904, 1157627904, 1174405120, 0, 0, 0, 0, 0, 0, 0, 0, 0, 637534208, 1157627904, 1157627904, 654311424, 1694498816, 620756992, 1728053248, 83886080, 83886080, 83886080, 83886080, 1711276032, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100663296, 83886080, 83886080, 117440512, 1694498816, 620756992, 1694498816, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 620756992, 1694498816, 620756992, 1191182336, 1157627904, 1157627904, 1157627904, 1157627904, 1157627904, 1157627904, 1157627904, 1157627904, 1157627904, 1157627904, 1157627904, 1157627904, 1157627904, 1157627904, 1157627904, 1157627904, 1157627904, 654311424, 1694498816, 100663296, 83886080, 83886080, 83886080, 83886080, 83886080, 83886080, 83886080, 83886080, 83886080, 83886080, 83886080, 83886080, 83886080, 83886080, 83886080, 83886080, 83886080, 83886080, 83886080, 1711276032)
-terrain_holes = PackedInt32Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-terrain_height = PackedFloat32Array(0.04, 0.16, 0.22, 0.18, 0.14, 0.1, 0.06, 0.08, 0.08, 0.06, 0.06, 0.02, 0.02, 0.06, 0.06, 0.04, 0.04, 0.02, 0, 0.04, 0.04, 0, 0.08, 0.4, 0.46, 0.260816, 0.188827, 0.120413, 0.1, 0.12, 0.12, 0.08, 0.08, 0.08, 0.08, 0.08, 0.12, 0.16, 0.16, 0.12, 0.1, 0.1, 0.04, 0, 0.088, 0.336705, 0.327715, 0.156675, 0.103643, 0.0844127, 0.12, 0.08, 0.06, 0.08, 0.1, 0.08, 0.06, 0.04, 0.0866627, 0.119063, 0.1581, 0.1905, 0.2, 0.12, 0.04, 0.02, 0.106, 0.224925, 0.181915, 0.085345, 0.104358, 0.13765, 0.12, 0.06, 0.08, 0.14, 0.1, 0.18, 0.16, 0.0298603, 0.129249, 0.128781, 0.0832375, 0.170717, 0.18, 0.1, 0.06, 0.02, 0.1, 0.19795, 0.11065, 0.133811, 0.232171, 0.197185, 0.103645, 0.08, 0.1, 0.1, 0.02, 0.2, 0.2, 0.0213144, 0.111875, 0.204602, 0.183143, 0.121847, 0.1, 0.04, 0.02, 0, 0.06, 0.23395, 0.17545, 0.133223, 0.224939, 0.150402, 0.087794, 0.081495, 0.0657, 0.06, 0.0269164, 0.120916, 0.14, 0.042073, 0.0359373, 0.183564, 0.199474, 0.08, 0.06, 0.02, 0.04, 0.02, 0.04, 0.2, 0.22, 0.084, 0.0398291, 0.0871525, 0.103712, 0.0625732, 0.187535, 0.28771, 0.142544, 0.120321, 0.18, 0.0990125, 0.0630125, 0.06, 0.04, 0.0589919, 0.0680258, 0.060634, 0.0712014, 0.0596403, 0.02, 0.08, 0.2, 0.26, 0.14, 0.16, 0.229197, 0.303178, 0.535407, 0.595829, 0.227894, 0.13777, 0.136118, 0.101917, 0.0965982, 0.0503664, 0.019494, 0.0779804, 0.173433, 0.156693, 0.0786741, 0.0573506, 0.02, 0.06, 0.14, 0.2, 0.12, 0.1, 0.188137, 0.314086, 0.506151, 0.598519, 0.335236, 0.218959, 0.161188, 0.0902197, 0.0605778, 0.151645, 0.180422, 0.369072, 0.45169, 0.280534, 0.149302, 0.114738, 0.1, 0.22, 0.18, 0.08, 0.04, 0.08, 0.06, 0.103568, 0.249646, 0.264856, 0.300788, 0.266049, 0.205561, 0.154145, 0.10815, 0.16537, 0.195182, 0.380497, 0.528922, 0.349438, 0.165764, 0.121234, 0.1, 0.24, 0.2, 0.14, 0.16, 0.12, 0.1, 0.1, 0.08, 0.04, 0.08, 0.20525, 0.182842, 0.115681, 0.112544, 0.149776, 0.164855, 0.235588, 0.227916, 0.183779, 0.145591, 0.00864041, 0.04, 0.18, 0.18, 0.1, 0.14, 0.08, 0.1, 0.14, 0.06, 0.02, 0.02, 0.16506, 0.17532, 0.0908156, 0.0522162, 0.0809947, 0.102621, 0.161902, 0.130384, 0.192549, 0.201427, 0.00864041, 0.04, 0.14, 0.14, 0.1, 0.12, 0.1, 0.08, 0.12, 0.14, 0.06, 0.02, 0.301852, 0.246538, 0.122377, 0.0401141, 0.111553, 0.22, 0.16, 0.0894031, 0.173343, 0.182953, 0, 0.02, 0.08, 0.12, 0.16, 0.2, 0.14, 0.16, 0.22, 0.2, 0.100793, 0.0302051, 0.233433, 0.279948, 0.270138, 0.30699, 0.300028, 0.2326, 0.172365, 0.0844308, 0.0967715, 0.0988605, 0, 0.02, 0.08, 0.14, 0.12, 0.12, 0.12, 0.16, 0.18, 0.0992005, 0.045892, 0.0749473, 0.170493, 0.281524, 0.573832, 0.527042, 0.335544, 0.16237, 0.126759, 0.086604, 0.0840571, 0.077999, 0.00961875, 0.06, 0.1, 0.08, 0.1, 0.08, 0.1, 0.08, 0.02, 0.0392005, 0.0271579, 0.0717642, 0.165824, 0.268976, 0.506799, 0.467698, 0.316621, 0.179164, 0.145312, 0.0724834, 0.115663, 0.110652, 0.00961875, 0.08, 0.2, 0.18, 0.14, 0.12, 0.12, 0.1, 0.06, 0.06, 0.0387784, 0.0259906, 0.0404097, 0.0541967, 0.165498, 0.197432, 0.125805, 0.182038, 0.141265, 0.0341578, 0.150158, 0.173009, 0.02, 0.06, 0.24, 0.24, 0.14, 0.14, 0.1, 0.08, 0.08, 0.1, 0.08, 0.04, 0.06, 0.101861, 0.126366, 0.198967, 0.253252, 0.269941, 0.208937, 0.060249, 0.0843388, 0.1341, 0.0645, 0.02, 0.18, 0.18, 0.1, 0.16, 0.1, 0.06, 0.06, 0.12, 0.12, 0.08, 0.08, 0.119861, 0.126366, 0.189125, 0.32503, 0.36207, 0.243133, 0.102937, 0.0974608, 0.1341, 0.0825, 0, 0.06, 0.08, 0.04, 0.08, 0.08, 0.04, 0.04, 0.06, 0.06, 0.06, 0.04, 0.06, 0.06, 0.0739917, 0.208795, 0.226803, 0.121815, 0.0858147, 0.06, 0.06, 0.04)
+terrain_height = PackedFloat32Array(0.115811, 0.162301, 0.22, 0.18, 0.14, 0.1, 0.06, 0.08, 0.08, 0.06, 0.06, 0.02, 0.02, 0.06, 0.06, 0.04, 0.04, 0.02, 0, 0.04, 0.04, 0, 0.176638, 0.21436, 0.2794, 0.225562, 0.186389, 0.124878, 0.100634, 0.12, 0.12, 0.08, 0.08, 0.08, 0.08, 0.0802462, 0.116246, 0.157879, 0.157598, 0.123581, 0.1, 0.1, 0.04, 0, 0.177616, 0.219594, 0.233445, 0.204884, 0.178413, 0.109694, 0.116382, 0.0815, 0.06, 0.08, 0.1, 0.0838623, 0.0658623, 0.0496694, 0.0836865, 0.124803, 0.153441, 0.187031, 0.194888, 0.122887, 0.04, 0.02, 0.129465, 0.210245, 0.207106, 0.179353, 0.158128, 0.139967, 0.116935, 0.0662633, 0.08, 0.135, 0.099, 0.173862, 0.150905, 0.0483203, 0.117695, 0.129266, 0.0872138, 0.170717, 0.176888, 0.100837, 0.0595, 0.02, 0.113115, 0.179264, 0.157512, 0.150234, 0.19689, 0.183298, 0.105804, 0.0811133, 0.1, 0.099, 0.027, 0.2, 0.14463, 0.0731058, 0.113371, 0.170186, 0.1757, 0.12605, 0.1, 0.0415, 0.0235, 0, 0.076054, 0.201574, 0.169268, 0.148336, 0.213487, 0.147834, 0.0925125, 0.0897246, 0.0753663, 0.06, 0.0269164, 0.120916, 0.11888, 0.0831896, 0.0826872, 0.135263, 0.181969, 0.092154, 0.06, 0.02, 0.04, 0.02, 0.04, 0.19124, 0.185653, 0.123945, 0.0606109, 0.0948504, 0.126233, 0.160275, 0.244522, 0.308973, 0.220263, 0.141312, 0.155345, 0.106524, 0.0787077, 0.0745068, 0.0486259, 0.067229, 0.0834589, 0.079077, 0.0773851, 0.0596403, 0.02, 0.124101, 0.164846, 0.202383, 0.138277, 0.149895, 0.209466, 0.296781, 0.410478, 0.36835, 0.302529, 0.23295, 0.145367, 0.111095, 0.0914028, 0.0736001, 0.043472, 0.0897455, 0.168567, 0.163821, 0.104308, 0.0573506, 0.02, 0.122513, 0.149972, 0.169335, 0.128562, 0.109173, 0.192187, 0.324815, 0.405458, 0.363998, 0.310552, 0.255167, 0.170482, 0.106987, 0.107212, 0.121256, 0.188522, 0.347385, 0.365658, 0.263985, 0.173827, 0.114738, 0.1, 0.189729, 0.166274, 0.113342, 0.0473631, 0.08, 0.064066, 0.135825, 0.246948, 0.28403, 0.297999, 0.260615, 0.19237, 0.134701, 0.118072, 0.138937, 0.221094, 0.320131, 0.342054, 0.298124, 0.19038, 0.121234, 0.1, 0.229167, 0.200007, 0.14, 0.16, 0.114604, 0.100078, 0.102243, 0.104111, 0.0941746, 0.10419, 0.182536, 0.174891, 0.125893, 0.111711, 0.136217, 0.19399, 0.26629, 0.273991, 0.222072, 0.168757, 0.00864041, 0.04, 0.18, 0.18, 0.1, 0.14, 0.085444, 0.100686, 0.113746, 0.0823232, 0.0510845, 0.0675601, 0.163034, 0.178316, 0.114022, 0.0896906, 0.0968505, 0.113606, 0.176367, 0.163245, 0.191929, 0.19423, 0.00864041, 0.04, 0.14, 0.14, 0.1, 0.12, 0.1, 0.0845392, 0.114739, 0.114246, 0.0611121, 0.082942, 0.210883, 0.22527, 0.166747, 0.136613, 0.159886, 0.208502, 0.162862, 0.0932648, 0.172144, 0.176741, 0, 0.02, 0.08, 0.12, 0.16, 0.2, 0.14, 0.16, 0.22, 0.191058, 0.0985624, 0.111228, 0.195412, 0.268151, 0.313023, 0.313377, 0.279886, 0.218315, 0.167543, 0.0919446, 0.104023, 0.105546, 0, 0.02, 0.08, 0.14, 0.118625, 0.118625, 0.12, 0.16, 0.18, 0.100338, 0.0523608, 0.11263, 0.184426, 0.290439, 0.357651, 0.35989, 0.339626, 0.181576, 0.132081, 0.0922016, 0.0848009, 0.0793486, 0.00961875, 0.06, 0.1, 0.0845, 0.102875, 0.084875, 0.1005, 0.08, 0.02248, 0.0397605, 0.030207, 0.0779943, 0.160189, 0.255753, 0.343987, 0.347465, 0.311412, 0.1877, 0.146442, 0.0763668, 0.115663, 0.110652, 0.00961875, 0.08, 0.2, 0.1745, 0.1385, 0.1185, 0.1185, 0.1, 0.05848, 0.05848, 0.0396196, 0.0341692, 0.0730437, 0.141524, 0.232215, 0.246902, 0.189987, 0.183355, 0.147395, 0.0341578, 0.150158, 0.173009, 0.02, 0.06, 0.236572, 0.207998, 0.149837, 0.135871, 0.104897, 0.0798448, 0.0790918, 0.1, 0.08, 0.04, 0.06, 0.101861, 0.126366, 0.204532, 0.248503, 0.269941, 0.208937, 0.060249, 0.0843388, 0.1341, 0.0645, 0.02, 0.182573, 0.176112, 0.128579, 0.148993, 0.104897, 0.0636448, 0.0610918, 0.12, 0.12, 0.08, 0.08, 0.119861, 0.126366, 0.194312, 0.316626, 0.36207, 0.243133, 0.102937, 0.0974608, 0.1341, 0.0825, 0, 0.06, 0.08, 0.04, 0.08, 0.08, 0.04, 0.04, 0.06, 0.06, 0.06, 0.04, 0.06, 0.06, 0.0739917, 0.208795, 0.226803, 0.121815, 0.0858147, 0.06, 0.06, 0.04)
 
 [node name="DeathCircle" type="Decal" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.0008, 0, 15.9952)
@@ -152,6 +224,42 @@ mesh = SubResource( "PlaneMesh_m6jlx" )
 [node name="SqaureFog" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 9.3292, 0.1, 9.57047)
 mesh = SubResource( "QuadMesh_4b8hm" )
+
+[node name="Area3D" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.88336, 0.00158167, 4.15106)
+collision_mask = 4
+input_ray_pickable = false
+script = ExtResource( "19_14lop" )
+
+[node name="Decal" type="Decal" parent="Area3D"]
+texture_albedo = ExtResource( "3_1r4l6" )
+modulate = Color(1, 0.854902, 0, 1)
+cull_mask = 1048573
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Area3D"]
+autoplay = "hurt_in_area"
+anims/hurt_in_area = SubResource( "Animation_p3vre" )
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D"]
+shape = SubResource( "CylinderShape3D_lns10" )
+
+[node name="Area3D2" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.9917, 0.874949, 11.5665)
+collision_mask = 4
+input_ray_pickable = false
+script = ExtResource( "19_14lop" )
+
+[node name="Decal" type="Decal" parent="Area3D2"]
+texture_albedo = ExtResource( "3_1r4l6" )
+modulate = Color(1, 0.854902, 0, 1)
+cull_mask = 1048573
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Area3D2"]
+autoplay = "hurt_in_area"
+anims/hurt_in_area = SubResource( "Animation_157wb" )
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D2"]
+shape = SubResource( "CylinderShape3D_lns10" )
 
 [connection signal="pressed" from="DebugDrawNavigation" to="DebugDrawNavigation" method="_on_debug_draw_navigation_pressed"]
 [connection signal="timeout" from="Spawner/Timer" to="Spawner" method="_on_timer_timeout"]
