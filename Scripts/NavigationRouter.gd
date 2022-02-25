@@ -39,8 +39,6 @@ func get_navigation_path(node: Node3D, target_position: Vector3) -> PackedVector
 	if idx in _path_cache:
 		return _path_cache[idx]
 	
-	print("cache miss: ", node.global_transform.origin, " to ", target_position)
-	
 	# Compute the path
 	var path_ids = NodeNavigationServer3D.astar.get_id_path(closest_id, target_id)
 	# TODO: is get_point_path 100% going to give the same result back?

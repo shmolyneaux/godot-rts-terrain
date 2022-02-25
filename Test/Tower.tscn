@@ -1,14 +1,30 @@
-[gd_scene load_steps=2 format=3 uid="uid://cfowg5ff74twv"]
+[gd_scene load_steps=5 format=3 uid="uid://cfowg5ff74twv"]
 
+[ext_resource type="Script" path="res://Test/Tower.gd" id="1_ndwym"]
+[ext_resource type="Texture2D" uid="uid://ciwsibsri51xd" path="res://Assets/Textures/selection_circle.png" id="2_h8n2o"]
 [ext_resource type="PackedScene" uid="uid://nan3njhm3o5i" path="res://Assets/Models/tower.glb" id="2_nx0hc"]
 
-[node name="Tower" type="Node3D"]
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_fq0gx"]
+radius = 0.419837
+height = 0.8
 
-[node name="tower" parent="." instance=ExtResource( "2_nx0hc" )]
+[node name="Tower" type="Area3D" groups=["buildings"]]
+script = ExtResource( "1_ndwym" )
+
+[node name="tower mesh" parent="." instance=ExtResource( "2_nx0hc" )]
 transform = Transform3D(0.4, 0, 0, 0, 0.4, 0, 0, 0, 0.4, 0, 0, 0)
 
-[node name="mergedBlocks(Clone)" parent="tower" index="0"]
+[node name="mergedBlocks(Clone)" parent="tower mesh" index="0"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 layers = 2
 
-[editable path="tower"]
+[node name="Decal" type="Decal" parent="."]
+visible = false
+extents = Vector3(0.6, 1, 0.6)
+texture_albedo = ExtResource( "2_h8n2o" )
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, 0)
+shape = SubResource( "CylinderShape3D_fq0gx" )
+
+[editable path="tower mesh"]

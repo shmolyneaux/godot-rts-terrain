@@ -899,6 +899,7 @@ func _regenerate_mesh():
 		# raycasts when editing the terrain.
 		if generate_static_physics_body or Engine.is_editor_hint():
 			var physics_mesh_node = MeshInstance3D.new()
+			physics_mesh_node.name = "RtsTerrainPhysicsMesh"
 			physics_mesh_node.mesh = ret["physics"]
 			add_child(physics_mesh_node)
 			managed_children.append(physics_mesh_node)
@@ -906,6 +907,8 @@ func _regenerate_mesh():
 			# The docs say this is "mainly used for testing"...
 			physics_mesh_node.create_trimesh_collision()
 			if physics_mesh_node.get_child_count() > 0:
+				physics_mesh_node.get_children()[0].name = "RtsTerrainPhysicsBody"
+				physics_mesh_node.get_children()[0].add_to_group("terrain_collider")
 				physics_mesh_node.get_children()[0].connect("input_event", _emit_physics_collider_input_events)
 				
 			# Now remove the mesh (since we didn't really want to show it in the first place)

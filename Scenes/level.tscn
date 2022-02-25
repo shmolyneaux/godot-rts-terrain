@@ -1,0 +1,79 @@
+[gd_scene load_steps=8 format=3 uid="uid://dgb7u13ogxwhe"]
+
+[ext_resource type="PackedScene" path="res://Objects/GameCamera.tscn" id="1_8r48a"]
+[ext_resource type="Script" path="res://UI/GoldAmount.gd" id="1_2518r"]
+[ext_resource type="Script" path="res://Test/DebugDrawNavigation.gd" id="1_ojxt8"]
+[ext_resource type="Script" path="res://UI/CreateTowerButton.gd" id="2_cbl31"]
+[ext_resource type="Script" path="res://UI/Rectangle.gd" id="4_bcl32"]
+[ext_resource type="Script" path="res://Test/PlayerController.gd" id="7_2outt"]
+[ext_resource type="PackedScene" uid="uid://iq0vwdwd0ik4" path="res://addons/rts_terrain/Brush.tscn" id="7_33ew6"]
+
+[node name="Level" type="Node3D"]
+
+[node name="Control" type="Control" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Control"]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Control/VBoxContainer"]
+offset_right = 56.0
+offset_bottom = 26.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="GoldLabel" type="Label" parent="Control/VBoxContainer/HBoxContainer"]
+offset_right = 36.0
+offset_bottom = 26.0
+text = "Gold"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="GoldAmount" type="Label" parent="Control/VBoxContainer/HBoxContainer"]
+offset_left = 40.0
+offset_top = 1.0
+offset_right = 41.0
+offset_bottom = 24.0
+script = ExtResource( "1_2518r" )
+
+[node name="CreateTower" type="Button" parent="Control/VBoxContainer"]
+offset_top = 30.0
+offset_right = 56.0
+offset_bottom = 61.0
+text = "Tower"
+script = ExtResource( "2_cbl31" )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="DebugDrawNavigation" type="Button" parent="Control"]
+visible = false
+offset_right = 199.0
+offset_bottom = 31.0
+text = "Toggle Navigation Debug"
+script = ExtResource( "1_ojxt8" )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="PlayerController" type="Node3D" parent="."]
+script = ExtResource( "7_2outt" )
+
+[node name="Brush" parent="PlayerController" instance=ExtResource( "7_33ew6" )]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.8991, -1.90735e-06, -107.585)
+
+[node name="Rectangle" type="Node2D" parent="PlayerController"]
+script = ExtResource( "4_bcl32" )
+
+[node name="GameCamera" parent="." instance=ExtResource( "1_8r48a" )]
+
+[connection signal="pressed" from="Control/VBoxContainer/CreateTower" to="Control/VBoxContainer/CreateTower" method="_on_create_tower_pressed"]
+[connection signal="pressed" from="Control/DebugDrawNavigation" to="Control/DebugDrawNavigation" method="_on_debug_draw_navigation_pressed"]

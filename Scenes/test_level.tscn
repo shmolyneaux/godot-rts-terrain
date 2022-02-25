@@ -1,6 +1,6 @@
-[gd_scene load_steps=11 format=3 uid="uid://di13a7q6jlpfv"]
+[gd_scene load_steps=11 format=3]
 
-[ext_resource type="PackedScene" uid="uid://dgb7u13ogxwhe" path="res://Scenes/level.tscn" id="1_jcokv"]
+[ext_resource type="PackedScene" path="res://Scenes/old_main.tscn" id="1_jcokv"]
 [ext_resource type="PackedScene" uid="uid://bq3vodcjtas42" path="res://addons/rts_terrain/RtsTerrain.tscn" id="2_42g1w"]
 [ext_resource type="Shader" uid="uid://wdhdxn6vgr7b" path="res://Assets/Textures/square_fog.tres" id="17_tejct"]
 
